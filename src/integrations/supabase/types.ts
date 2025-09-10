@@ -153,6 +153,77 @@ export type Database = {
         }
         Relationships: []
       }
+      educational_materials: {
+        Row: {
+          anxiety_level: Database["public"]["Enums"]["anxiety_level"] | null
+          content: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          image_url: string | null
+          is_published: boolean | null
+          material_type: string | null
+          title: string
+          updated_at: string | null
+          video_url: string | null
+        }
+        Insert: {
+          anxiety_level?: Database["public"]["Enums"]["anxiety_level"] | null
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean | null
+          material_type?: string | null
+          title: string
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          anxiety_level?: Database["public"]["Enums"]["anxiety_level"] | null
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean | null
+          material_type?: string | null
+          title?: string
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "educational_materials_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gad7_questions: {
+        Row: {
+          created_at: string | null
+          id: string
+          question_order: number
+          question_text: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          question_order: number
+          question_text: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          question_order?: number
+          question_text?: string
+        }
+        Relationships: []
+      }
       menus: {
         Row: {
           category: string | null
@@ -213,23 +284,293 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          birth_date: string | null
+          consent_date: string | null
+          consent_given: boolean | null
+          created_at: string | null
           email: string | null
           full_name: string | null
+          gestational_age: number | null
           id: string
+          is_primigravida: boolean | null
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+          updated_at: string | null
         }
         Insert: {
           avatar_url?: string | null
+          birth_date?: string | null
+          consent_date?: string | null
+          consent_given?: boolean | null
+          created_at?: string | null
           email?: string | null
           full_name?: string | null
+          gestational_age?: number | null
           id: string
+          is_primigravida?: boolean | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
         }
         Update: {
           avatar_url?: string | null
+          birth_date?: string | null
+          consent_date?: string | null
+          consent_given?: boolean | null
+          created_at?: string | null
           email?: string | null
           full_name?: string | null
+          gestational_age?: number | null
           id?: string
+          is_primigravida?: boolean | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
         }
         Relationships: []
+      }
+      quiz_options: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_correct: boolean | null
+          option_order: number
+          option_text: string
+          question_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_correct?: boolean | null
+          option_order: number
+          option_text: string
+          question_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_correct?: boolean | null
+          option_order?: number
+          option_text?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_options_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_questions: {
+        Row: {
+          created_at: string | null
+          id: string
+          question_order: number
+          question_text: string
+          quiz_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          question_order: number
+          question_text: string
+          quiz_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          question_order?: number
+          question_text?: string
+          quiz_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_questions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quizzes: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_published: boolean | null
+          material_id: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_published?: boolean | null
+          material_id?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_published?: boolean | null
+          material_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quizzes_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "educational_materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      screening_answers: {
+        Row: {
+          created_at: string | null
+          id: string
+          question_id: string
+          score: number
+          screening_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          question_id: string
+          score: number
+          screening_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          question_id?: string
+          score?: number
+          screening_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "screening_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "gad7_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "screening_answers_screening_id_fkey"
+            columns: ["screening_id"]
+            isOneToOne: false
+            referencedRelation: "screenings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      screenings: {
+        Row: {
+          anxiety_level: Database["public"]["Enums"]["anxiety_level"] | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["screening_status"]
+          total_score: number | null
+          user_id: string
+        }
+        Insert: {
+          anxiety_level?: Database["public"]["Enums"]["anxiety_level"] | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["screening_status"]
+          total_score?: number | null
+          user_id: string
+        }
+        Update: {
+          anxiety_level?: Database["public"]["Enums"]["anxiety_level"] | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["screening_status"]
+          total_score?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "screenings_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "screenings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_quiz_attempts: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          quiz_id: string
+          score: number
+          total_questions: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          quiz_id: string
+          score?: number
+          total_questions: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          quiz_id?: string
+          score?: number
+          total_questions?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_quiz_attempts_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_quiz_attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -239,7 +580,10 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      anxiety_level: "minimal" | "mild" | "moderate" | "severe"
       complaint_status: "baru" | "proses" | "selesai"
+      screening_status: "in_progress" | "completed" | "reviewed"
+      user_role: "patient" | "midwife" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -367,7 +711,10 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      anxiety_level: ["minimal", "mild", "moderate", "severe"],
       complaint_status: ["baru", "proses", "selesai"],
+      screening_status: ["in_progress", "completed", "reviewed"],
+      user_role: ["patient", "midwife", "admin"],
     },
   },
 } as const
