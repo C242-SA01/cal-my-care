@@ -13,24 +13,26 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const { signIn, signUp, user, loading } = useAuth();
+  const { signIn, signUp, user, userProfile, isProfileLoading: loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user && !loading) {
-      navigate('/dashboard');
+    if (user && !loading && userProfile) {
+      if (userProfile.role === 'admin' || userProfile.role === 'midwife') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, userProfile, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
-      const { error } = await signIn(email, password);
-      if (!error) {
-        navigate('/dashboard');
-      }
+      await signIn(email, password);
+      // The useEffect will handle the redirect
     } finally {
       setIsLoading(false);
     }

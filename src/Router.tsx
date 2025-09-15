@@ -7,30 +7,65 @@ import Results from "./pages/Results";
 import AuthConfirm from "./pages/AuthConfirm";
 import { useAuth } from "./hooks/useAuth";
 import NotFound from "./pages/NotFound";
-import AdminLayout from "./layouts/AdminLayout";
-import BottomNavbar from "./components/BottomNavbar";
 
-// Helper component for a generic protected route
-const ProtectedRoute = () => {
+// Layouts
+import AdminLayout from "./layouts/AdminLayout";
+import PatientLayout from "./layouts/PatientLayout";
+
+// Admin Pages
+import AdminDashboard from "./pages/AdminDashboard";
+import PatientManagement from "./components/admin/PatientManagement";
+import PatientDetail from "./components/admin/PatientDetail";
+import EducationManagement from "./components/admin/EducationManagement";
+import ScreeningManagement from "./components/admin/ScreeningManagement";
+
+// Patient Pages
+import History from "./pages/History";
+import Education from "./pages/Education";
+import EducationDetail from "./pages/EducationDetail";
+import Profile from "./pages/Profile";
+
+
+// --- Layouts and Route Guards ---
+
+/**
+ * A layout for public routes, or for users who are not authenticated yet.
+ */
+const PublicLayout = () => <Outlet />;
+
+/**
+ * A route guard for authenticated users.
+ * If the user is not authenticated, it redirects them to the /auth page.
+ */
+const AuthenticatedRoute = () => {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? <Outlet /> : <Navigate to="/auth" replace />;
 };
 
-// Layout for regular users (ibu hamil)
-const UserLayout = () => (
-  <div className="pb-20">
-    <Outlet />
-    <BottomNavbar />
-  </div>
-);
+/**
+ * A route guard for admin/midwife users.
+ * If the user is not an admin, it redirects them to the regular user dashboard.
+ */
+const AdminRouteGuard = () => {
+  const { userProfile } = useAuth();
+  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'midwife';
+  return isAdmin ? <AdminLayout /> : <Navigate to="/dashboard" replace />;
+};
 
-// Main App Router
+/**
+ * A route guard for regular patient users.
+ * If the user is an admin, it redirects them to the admin dashboard.
+ */
+const PatientRouteGuard = () => {
+  const { userProfile } = useAuth();
+  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'midwife';
+  return !isAdmin ? <PatientLayout /> : <Navigate to="/admin" replace />;
+};
+
+
+// --- Main App Router ---
 const Router = () => {
-  const { isAuthenticated, userProfile, isProfileLoading } = useAuth();
-
-  // You should have a 'role' column in your 'profiles' table in Supabase.
-  // e.g., 'admin' or 'user'.
-  const userRole = userProfile?.role || 'user';
+  const { isProfileLoading } = useAuth();
 
   if (isProfileLoading) {
     return (
@@ -44,34 +79,36 @@ const Router = () => {
     <BrowserRouter>
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<Index />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/auth/confirm" element={<AuthConfirm />} />
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/auth/confirm" element={<AuthConfirm />} />
+        </Route>
 
-        {/* Authenticated Routes Logic */}
-        {isAuthenticated ? (
-            userRole === 'admin' ? (
-              // Admin Routes
-              <Route element={<AdminLayout />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/dashboard/patients" element={<div>Daftar Pasien</div>} />
-                <Route path="/dashboard/results" element={<div>Hasil Skrining Semua Pasien</div>} />
-                <Route path="/*" element={<Navigate to="/dashboard" replace />} />
-              </Route>
-            ) : (
-              // User (Ibu Hamil) Routes
-              <Route element={<UserLayout />}>
-                <Route path="/screening" element={<Screening />} />
-                <Route path="/results" element={<Results />} />
-                <Route path="/*" element={<Navigate to="/screening" replace />} />
-              </Route>
-            )
-        ) : (
-          // Redirect to auth if not authenticated and not on a public route
-          <Route path="/*" element={<Navigate to="/auth" replace />} />
-        )}
+        {/* Authenticated Routes */}
+        <Route element={<AuthenticatedRoute />}>
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminRouteGuard />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="patients" element={<PatientManagement />} />
+            <Route path="patient/:id" element={<PatientDetail />} />
+            <Route path="education" element={<EducationManagement />} />
+            <Route path="results" element={<ScreeningManagement />} />
+          </Route>
 
-        {/* Not Found Route */}
+          {/* Regular User/Patient Routes */}
+          <Route element={<PatientRouteGuard />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/screening" element={<Screening />} />
+            <Route path="/results" element={<Results />} />
+            <Route path="/history" element={<History />} />
+            <Route path="/education" element={<Education />} />
+            <Route path="/education/:id" element={<EducationDetail />} />
+            <Route path="/profile" element={<Profile />} />
+          </Route>
+        </Route>
+
+        {/* Fallback Not Found Route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
