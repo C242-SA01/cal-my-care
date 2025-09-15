@@ -3,18 +3,29 @@ import { Home, LineChart, LogOut, Package2, Users, BookOpen } from "lucide-react
 import { Button } from "./ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
-const SidebarContent = () => {
+interface SidebarContentProps {
+  onLinkClick?: () => void;
+}
+
+const SidebarContent = ({ onLinkClick }: SidebarContentProps) => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/auth", { replace: true });
+    if (onLinkClick) onLinkClick();
+  };
+
+  const handleLinkClick = () => {
+    if (onLinkClick) {
+      onLinkClick();
+    }
   };
 
   return (
     <div className="flex h-full max-h-screen flex-col gap-2">
       <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-        <NavLink to="/admin" className="flex items-center gap-2 font-semibold">
+        <NavLink to="/admin" className="flex items-center gap-2 font-semibold" onClick={handleLinkClick}>
           <Package2 className="h-6 w-6" />
           <span className="">CallMyCare</span>
         </NavLink>
@@ -24,6 +35,7 @@ const SidebarContent = () => {
           <NavLink
             to="/admin"
             end
+            onClick={handleLinkClick}
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`
             }
@@ -33,6 +45,7 @@ const SidebarContent = () => {
           </NavLink>
           <NavLink
             to="/admin/patients"
+            onClick={handleLinkClick}
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`
             }
@@ -42,6 +55,7 @@ const SidebarContent = () => {
           </NavLink>
           <NavLink
             to="/admin/education"
+            onClick={handleLinkClick}
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`
             }
@@ -51,6 +65,7 @@ const SidebarContent = () => {
           </NavLink>
           <NavLink
             to="/admin/results"
+            onClick={handleLinkClick}
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`
             }

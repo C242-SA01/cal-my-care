@@ -1,13 +1,26 @@
-import { Outlet, NavLink } from "react-router-dom";
-import { Menu, Package2 } from "lucide-react";
+import { useState } from "react";
+import { Outlet } from "react-router-dom";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import PatientSidebarContent from "@/components/PatientSidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const PatientLayout = () => {
   const { userProfile } = useAuth();
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  const handleLinkClick = () => {
+    setIsSheetOpen(false);
+  };
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return "U";
@@ -22,7 +35,7 @@ const PatientLayout = () => {
       <div className="flex flex-col">
         <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
           <div className="md:hidden">
-            <Sheet>
+            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild>
                 <Button
                   variant="outline"
@@ -33,14 +46,18 @@ const PatientLayout = () => {
                   <span className="sr-only">Toggle navigation menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="flex flex-col p-0">
-                <PatientSidebarContent />
+              <SheetContent side="left" className="flex flex-col p-0 sm:max-w-xs">
+                <SheetHeader className="sr-only">
+                  <SheetTitle>Menu</SheetTitle>
+                  <SheetDescription>Navigasi utama untuk akun pasien.</SheetDescription>
+                </SheetHeader>
+                <PatientSidebarContent onLinkClick={handleLinkClick} />
               </SheetContent>
             </Sheet>
           </div>
           
           <div className="w-full flex-1">
-            <h1 className="font-semibold text-lg">Dashboard Pasien</h1>
+            {/* <h1 className="font-semibold text-lg">Dashboard Pasien</h1> */}
           </div>
 
           <Avatar className="h-9 w-9">

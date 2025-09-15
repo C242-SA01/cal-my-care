@@ -12,13 +12,24 @@ import { Button } from "./ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
-const PatientSidebarContent = () => {
+interface PatientSidebarContentProps {
+  onLinkClick?: () => void;
+}
+
+const PatientSidebarContent = ({ onLinkClick }: PatientSidebarContentProps) => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
 
   const handleLogout = async () => {
     await signOut();
     navigate("/", { replace: true });
+    if (onLinkClick) onLinkClick();
+  };
+
+  const handleLinkClick = () => {
+    if (onLinkClick) {
+      onLinkClick();
+    }
   };
 
   const menuItems = [
@@ -32,7 +43,7 @@ const PatientSidebarContent = () => {
   return (
     <div className="flex h-full max-h-screen flex-col gap-2">
       <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-        <NavLink to="/dashboard" className="flex items-center gap-2 font-semibold">
+        <NavLink to="/dashboard" className="flex items-center gap-2 font-semibold" onClick={handleLinkClick}>
           <Package2 className="h-6 w-6 text-primary" />
           <span className="">CallMyCare</span>
         </NavLink>
@@ -44,6 +55,7 @@ const PatientSidebarContent = () => {
               key={item.to}
               to={item.to}
               end={item.to === "/dashboard"}
+              onClick={handleLinkClick}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${
                   isActive ? "bg-muted text-primary" : ""

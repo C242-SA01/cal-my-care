@@ -2,7 +2,11 @@ import { ArrowRight, Heart, Shield, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
+import { useNavigate } from "react-router-dom";
+
 const Hero = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-accent/30 to-maternal-light/20 overflow-hidden">
       {/* Background decoration */}
@@ -37,13 +41,15 @@ const Hero = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button variant="maternal" size="lg">
+              <Button variant="maternal" size="lg" onClick={() => navigate("/auth")}>
                 Start Screening
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              <Button variant="outline" size="lg" className="hover:bg-accent transition-smooth">
-                Learn More
-              </Button>
+              <a href="/#about">
+                <Button variant="outline" size="lg" className="hover:bg-accent transition-smooth">
+                  Learn More
+                </Button>
+              </a>
             </div>
 
             {/* Stats */}

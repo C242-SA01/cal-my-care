@@ -1,7 +1,11 @@
 import { BookOpen, Brain, CheckCircle, Heart, MessageSquare, Stethoscope } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "./ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Features = () => {
+  const navigate = useNavigate();
+
   const features = [
     {
       icon: Brain,
@@ -51,7 +55,7 @@ const Features = () => {
   };
 
   return (
-    <section className="py-20 bg-gradient-to-b from-background to-accent/20">
+    <section id="about" className="py-20 bg-gradient-to-b from-background to-accent/20">
       <div className="container px-4">
         {/* Header */}
         <div className="text-center mb-16 space-y-4">
@@ -72,7 +76,7 @@ const Features = () => {
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div id="education" className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
@@ -98,7 +102,7 @@ const Features = () => {
         </div>
 
         {/* CTA Section */}
-        <div className="mt-16 text-center">
+        <div id="screening" className="mt-16 text-center">
           <Card className="inline-block p-8 card-gradient shadow-maternal border-0">
             <div className="space-y-4">
               <h3 className="text-2xl font-bold text-foreground">Ready to Start Your Screening?</h3>
@@ -106,12 +110,14 @@ const Features = () => {
                 Take the first step towards better maternal health with our professional GAD-7 assessment.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
-                <button className="px-6 py-3 bg-gradient-maternal text-white rounded-lg font-medium shadow-maternal hover:shadow-glow transition-all duration-300">
+                <Button onClick={() => navigate("/auth")} size="lg" className="px-6 py-3 bg-gradient-maternal text-white rounded-lg font-medium shadow-maternal hover:shadow-glow transition-all duration-300">
                   Begin Assessment
-                </button>
-                <button className="px-6 py-3 border border-primary/20 text-foreground rounded-lg font-medium hover:bg-accent transition-smooth">
-                  Learn About GAD-7
-                </button>
+                </Button>
+                <a href="#about">
+                  <Button size="lg" variant="outline" className="px-6 py-3 border-primary/20 text-foreground rounded-lg font-medium hover:bg-accent transition-smooth">
+                    Learn About GAD-7
+                  </Button>
+                </a>
               </div>
             </div>
           </Card>
