@@ -7,7 +7,7 @@ CREATE TYPE public.screening_status AS ENUM ('in_progress', 'completed', 'review
 -- Create enum for anxiety levels
 CREATE TYPE public.anxiety_level AS ENUM ('minimal', 'mild', 'moderate', 'severe');
 
--- Update profiles table for CallMyCare
+-- Update profiles table for CalMyCare
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS role user_role DEFAULT 'patient';
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS phone text;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS birth_date date;

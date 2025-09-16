@@ -179,7 +179,7 @@ export default function Results() {
             <div className="flex items-center">
               <Heart className="h-8 w-8 text-primary mr-3" />
               <div>
-                <h1 className="text-xl font-bold text-primary">CallMyCare</h1>
+                <h1 className="text-xl font-bold text-primary">CalMyCare</h1>
                 <p className="text-sm text-muted-foreground">Hasil Skrining</p>
               </div>
             </div>

@@ -21,33 +21,33 @@ const Hero = () => {
             <div className="space-y-4">
               <div className="inline-flex items-center px-4 py-2 rounded-full bg-accent border border-maternal/20">
                 <Heart className="w-4 h-4 text-maternal mr-2" />
-                <span className="text-sm font-medium text-foreground">Maternal Health Screening</span>
+                <span className="text-sm font-medium text-foreground">Skrining Kesehatan Ibu</span>
               </div>
               
               <h1 className="text-4xl md:text-6xl font-bold leading-tight">
                 <span className="bg-gradient-to-r from-primary to-maternal bg-clip-text text-transparent">
-                  CallMyCare
+                  CalMyCare
                 </span>
                 <br />
                 <span className="text-foreground">
-                  Caring for You &amp; Baby
+                  Merawat Anda &amp; Bayi
                 </span>
               </h1>
               
               <p className="text-xl text-muted-foreground max-w-lg leading-relaxed">
-                Professional anxiety screening and educational support for first-time mothers. 
-                Take the GAD-7 assessment and access personalized maternal health resources.
+                Skrining kecemasan profesional dan dukungan edukasi untuk ibu baru. 
+                Ikuti penilaian GAD-7 dan akses sumber daya kesehatan ibu yang dipersonalisasi.
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Button variant="maternal" size="lg" onClick={() => navigate("/auth")}>
-                Start Screening
+                Mulai Skrining
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <a href="/#about">
                 <Button variant="outline" size="lg" className="hover:bg-accent transition-smooth">
-                  Learn More
+                  Pelajari Lebih Lanjut
                 </Button>
               </a>
             </div>
@@ -56,15 +56,15 @@ const Hero = () => {
             <div className="flex items-center space-x-8 pt-8">
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">95%</div>
-                <div className="text-sm text-muted-foreground">Accuracy Rate</div>
+                <div className="text-sm text-muted-foreground">Tingkat Akurasi</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-maternal">1000+</div>
-                <div className="text-sm text-muted-foreground">Mothers Helped</div>
+                <div className="text-sm text-muted-foreground">Ibu Terbantu</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-success">24/7</div>
-                <div className="text-sm text-muted-foreground">Support</div>
+                <div className="text-sm text-muted-foreground">Dukungan</div>
               </div>
             </div>
           </div>
@@ -77,9 +77,9 @@ const Hero = () => {
                   <Shield className="h-6 w-6 text-primary" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="font-semibold text-foreground">Professional GAD-7 Screening</h3>
+                  <h3 className="font-semibold text-foreground">Skrining GAD-7 Profesional</h3>
                   <p className="text-sm text-muted-foreground">
-                    Clinically validated anxiety assessment tool designed specifically for maternal health.
+                    Alat penilaian kecemasan yang divalidasi secara klinis dan dirancang khusus untuk kesehatan ibu.
                   </p>
                 </div>
               </div>
@@ -91,9 +91,9 @@ const Hero = () => {
                   <Heart className="h-6 w-6 text-maternal" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="font-semibold text-foreground">Personalized Care Plans</h3>
+                  <h3 className="font-semibold text-foreground">Rencana Perawatan Pribadi</h3>
                   <p className="text-sm text-muted-foreground">
-                    Receive tailored recommendations and educational materials based on your screening results.
+                    Dapatkan rekomendasi dan materi edukasi yang disesuaikan berdasarkan hasil skrining Anda.
                   </p>
                 </div>
               </div>
@@ -105,9 +105,9 @@ const Hero = () => {
                   <Users className="h-6 w-6 text-success" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="font-semibold text-foreground">Healthcare Provider Dashboard</h3>
+                  <h3 className="font-semibold text-foreground">Dasbor Penyedia Layanan Kesehatan</h3>
                   <p className="text-sm text-muted-foreground">
-                    Secure platform for healthcare providers to monitor and support their patients.
+                    Platform aman bagi penyedia layanan kesehatan untuk memantau dan mendukung pasien mereka.
                   </p>
                 </div>
               </div>

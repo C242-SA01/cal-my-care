@@ -82,7 +82,7 @@ const Education = () => {
             >
               <CardHeader className="p-0">
                 <img 
-                  src={material.image_url || 'https://via.placeholder.com/400x225?text=CallMyCare'} 
+                  src={material.image_url || 'https://via.placeholder.com/400x225?text=CalMyCare'} 
                   alt={material.title} 
                   className="rounded-t-lg aspect-video object-cover"
                 />

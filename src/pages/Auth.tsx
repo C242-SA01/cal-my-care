@@ -66,7 +66,7 @@ export default function Auth() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <Heart className="h-8 w-8 text-primary mr-2" />
-            <h1 className="text-2xl font-bold text-primary">CallMyCare</h1>
+            <h1 className="text-2xl font-bold text-primary">CalMyCare</h1>
           </div>
           <p className="text-muted-foreground">
             Platform skrining kecemasan untuk ibu hamil primigravida

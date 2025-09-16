@@ -231,7 +231,7 @@ export default function Screening() {
             <div className="flex items-center">
               <Heart className="h-8 w-8 text-primary mr-3" />
               <div>
-                <h1 className="text-xl font-bold text-primary">CallMyCare</h1>
+                <h1 className="text-xl font-bold text-primary">CalMyCare</h1>
                 <p className="text-sm text-muted-foreground">Skrining GAD-7</p>
               </div>
             </div>

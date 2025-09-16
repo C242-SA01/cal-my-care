@@ -42,7 +42,7 @@ const AuthConfirm = () => {
           setConfirmed(true);
           toast({
             title: "Berhasil!",
-            description: "Email Anda telah berhasil diverifikasi. Selamat datang di CallMyCare!",
+            description: "Email Anda telah berhasil diverifikasi. Selamat datang di CalMyCare!",
           });
           
           // Redirect to dashboard after successful confirmation
@@ -69,7 +69,7 @@ const AuthConfirm = () => {
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-primary">CallMyCare</h1>
+          <h1 className="text-2xl font-bold text-primary">CalMyCare</h1>
           <p className="text-muted-foreground mt-2">Verifikasi Email</p>
         </div>
 
