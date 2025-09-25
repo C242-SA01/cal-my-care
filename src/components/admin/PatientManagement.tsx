@@ -214,7 +214,8 @@ const PatientManagement = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="rounded-md border">
+        {/* Desktop View: Table */}
+        <div className="hidden md:block rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -293,6 +294,67 @@ const PatientManagement = () => {
               )}
             </TableBody>
           </Table>
+        </div>
+
+        {/* Mobile View: Card List */}
+        <div className="md:hidden space-y-4">
+          {filteredPatients.length === 0 ? (
+            <p className="text-center py-8 text-muted-foreground">
+              {searchTerm ? "Tidak ada pasien yang ditemukan" : "Belum ada pasien"}
+            </p>
+          ) : (
+            filteredPatients.map((patient) => (
+              <Card key={patient.id} className="shadow-md">
+                <CardHeader>
+                  <CardTitle className="text-base">{patient.full_name || "Tidak ada nama"}</CardTitle>
+                  <p className="text-sm text-muted-foreground">{patient.email}</p>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Tgl. Daftar</span>
+                    <span>{format(parseISO(patient.created_at), "dd MMM yyyy", { locale: id })}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Skor Terakhir</span>
+                    <span>{patient.latest_screening?.total_score || "-"}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Kecemasan</span>
+                    <Badge variant={getAnxietyBadgeVariant(patient.latest_screening?.anxiety_level || null)}>
+                      {getAnxietyText(patient.latest_screening?.anxiety_level || null)}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Status</span>
+                    <Badge variant={patient.latest_screening?.status === "completed" ? "default" : "secondary"}>
+                      {getStatusText(patient.latest_screening?.status || "")}
+                    </Badge>
+                  </div>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full mt-4"
+                        onClick={() => setSelectedPatient(patient)}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Lihat Detail
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Detail Pasien: {patient.full_name}</DialogTitle>
+                      </DialogHeader>
+                      {selectedPatient && (
+                        <PatientDetail patient={selectedPatient} />
+                      )}
+                    </DialogContent>
+                  </Dialog>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
       </CardContent>
     </Card>

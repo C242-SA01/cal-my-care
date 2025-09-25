@@ -1,14 +1,14 @@
-import { Home, FileText, BookOpen, LayoutDashboard } from "lucide-react";
+import { Home, Users, BookOpen, LineChart } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 const menuItems = [
-  { to: "/dashboard", icon: Home, label: "Home" },
-  { to: "/screening", icon: FileText, label: "Skrining" },
-  { to: "/education", icon: BookOpen, label: "Edukasi" },
-  { to: "/history", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/admin", icon: Home, label: "Dashboard" },
+  { to: "/admin/patients", icon: Users, label: "Pasien" },
+  { to: "/admin/education", icon: BookOpen, label: "Edukasi" },
+  { to: "/admin/results", icon: LineChart, label: "Hasil" },
 ];
 
-const BottomNavbar = () => {
+const AdminBottomNavbar = () => {
   const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
     `flex flex-1 flex-col items-center justify-center gap-1 py-2 text-xs sm:text-sm ${
       isActive ? "text-primary" : "text-muted-foreground"
@@ -20,7 +20,7 @@ const BottomNavbar = () => {
         <NavLink
           key={item.to}
           to={item.to}
-          end={item.to === "/dashboard"}
+          end={item.to === "/admin"}
           className={navLinkClasses}
         >
           <item.icon className="h-5 w-5" />
@@ -31,4 +31,4 @@ const BottomNavbar = () => {
   );
 };
 
-export default BottomNavbar;
+export default AdminBottomNavbar;

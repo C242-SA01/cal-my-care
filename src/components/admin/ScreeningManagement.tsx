@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
@@ -60,6 +61,7 @@ const scoreMeaning = ['Tidak sama sekali', 'Beberapa hari', 'Lebih dari separuh 
 export default function ScreeningManagement() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Data states
   const [allResults, setAllResults] = useState<ScreeningResult[]>([]);
@@ -69,6 +71,7 @@ export default function ScreeningManagement() {
   // Feature states
   const [searchTerm, setSearchTerm] = useState('');
   const [anxietyFilter, setAnxietyFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState(() => searchParams.get('status') || 'all');
   const [sortConfig, setSortConfig] = useState<{ key: keyof ScreeningResult; direction: 'asc' | 'desc' } | null>({ key: 'completed_at', direction: 'desc' });
   
   // Pagination states
@@ -125,7 +128,7 @@ export default function ScreeningManagement() {
 
     setIsSubmittingReview(true);
     try {
-      const screeningId = modalData[0].screening_id;
+      const screeningId = modalData[0].id;
       const { error } = await supabase
         .from('screenings')
         .update({
@@ -160,7 +163,8 @@ export default function ScreeningManagement() {
       .filter(res => 
         (res.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
          res.email?.toLowerCase().includes(searchTerm.toLowerCase())) &&
-        (anxietyFilter === 'all' || res.anxiety_level === anxietyFilter)
+        (anxietyFilter === 'all' || res.anxiety_level === anxietyFilter) &&
+        (statusFilter === 'all' || res.status === statusFilter)
       );
 
     if (sortConfig !== null) {
@@ -171,7 +175,7 @@ export default function ScreeningManagement() {
       });
     }
     return results;
-  }, [allResults, searchTerm, anxietyFilter, sortConfig]);
+  }, [allResults, searchTerm, anxietyFilter, statusFilter, sortConfig]);
 
   const paginatedResults = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -197,10 +201,11 @@ export default function ScreeningManagement() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-2 mb-4">
-            <div className="relative flex-grow"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input type="search" placeholder="Cari berdasarkan nama atau email..." className="pl-8 sm:w-full" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
-            <Select value={anxietyFilter} onValueChange={setAnxietyFilter}><SelectTrigger className="sm:w-[180px]"><SelectValue placeholder="Filter Level" /></SelectTrigger><SelectContent><SelectItem value="all">Semua Level</SelectItem>{ANXIETY_LEVELS.map(level => <SelectItem key={level} value={level} className="capitalize">{level}</SelectItem>)}</SelectContent></Select>
+            <div className="relative flex-grow"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input type="search" placeholder="Cari nama atau email..." className="pl-8 w-full" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
+            <Select value={anxietyFilter} onValueChange={setAnxietyFilter}><SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Filter Level" /></SelectTrigger><SelectContent><SelectItem value="all">Semua Level</SelectItem>{ANXIETY_LEVELS.map(level => <SelectItem key={level} value={level} className="capitalize">{level}</SelectItem>)}</SelectContent></Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Filter Status" /></SelectTrigger><SelectContent><SelectItem value="all">Semua Status</SelectItem>{STATUS_LEVELS.map(level => <SelectItem key={level} value={level} className="capitalize">{level.replace('_', ' ')}</SelectItem>)}</SelectContent></Select>
           </div>
-          <div className="rounded-md border">
+          <div className="hidden md:block rounded-md border">
             <Table>
               <TableHeader><TableRow>
                 <TableHead onClick={() => handleSort('full_name')} className="cursor-pointer">Pasien{renderSortArrow('full_name')}</TableHead>
@@ -222,6 +227,40 @@ export default function ScreeningManagement() {
               )) : <TableRow><TableCell colSpan={6} className="text-center h-24">Tidak ada hasil yang cocok.</TableCell></TableRow>}</TableBody>
             </Table>
           </div>
+
+          {/* Mobile View: Card List */}
+          <div className="md:hidden space-y-4">
+            {paginatedResults.length > 0 ? paginatedResults.map((result) => (
+              <Card key={result.id} className="shadow-md">
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="text-base">{result.full_name || 'N/A'}</CardTitle>
+                      <p className="text-sm text-muted-foreground">{new Date(result.completed_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                    </div>
+                    <Badge className={`capitalize ${badgeColorMap[result.anxiety_level]}`}>{result.anxiety_level}</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Skor</span>
+                    <span className="font-semibold">{result.total_score} / 21</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Status</span>
+                    <Badge className={`capitalize ${statusBadgeMap[result.status]}`}>{result.status.replace('_', ' ')}</Badge>
+                  </div>
+                  <Button variant="outline" size="sm" className="w-full mt-4" onClick={() => handleViewDetails(result.id)}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Lihat Detail
+                  </Button>
+                </CardContent>
+              </Card>
+            )) : (
+              <p className="text-center py-8 text-muted-foreground">Tidak ada hasil yang cocok.</p>
+            )}
+          </div>
+
           <Pagination className="mt-4"><PaginationContent><PaginationItem><PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.max(1, p - 1)); }} /></PaginationItem>{[...Array(totalPages).keys()].map(i => <PaginationItem key={i}><PaginationLink href="#" isActive={currentPage === i + 1} onClick={(e) => { e.preventDefault(); setCurrentPage(i + 1); }}>{i + 1}</PaginationLink></PaginationItem>)}<PaginationItem><PaginationNext href="#" onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.min(totalPages, p + 1)); }} /></PaginationItem></PaginationContent></Pagination>
         </CardContent>
       </Card>
