@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
-import { 
+import {
   ArrowLeft, 
   Heart, 
   TrendingUp, 
@@ -15,7 +15,8 @@ import {
   AlertTriangle,
   CheckCircle,
   Info,
-  Loader2
+  Loader2,
+  MessageSquare
 } from 'lucide-react';
 
 interface Screening {
@@ -23,6 +24,8 @@ interface Screening {
   total_score: number;
   anxiety_level: 'minimal' | 'mild' | 'moderate' | 'severe';
   completed_at: string;
+  status: 'in_progress' | 'completed' | 'reviewed';
+  notes: string | null;
 }
 
 interface EducationalMaterial {
@@ -233,6 +236,26 @@ export default function Results() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Midwife's Review */}
+        {screening.status === 'reviewed' && screening.notes && (
+          <Card className="mb-8 border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-primary" />
+                Tinjauan dari Bidan
+              </CardTitle>
+              <CardDescription>
+                Berikut adalah catatan dan rekomendasi dari bidan berdasarkan hasil skrining Anda.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="prose prose-sm max-w-none text-foreground">
+                <p>{screening.notes}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Score Interpretation */}
         <Card className="mb-8">

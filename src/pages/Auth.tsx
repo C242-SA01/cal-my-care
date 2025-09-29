@@ -1,58 +1,124 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, Heart } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+
+import { Button } from '@/components/ui/button';
+import { 
+  Card, CardContent, CardDescription, CardHeader, CardTitle 
+} from '@/components/ui/card';
+import { 
+  Form, FormControl, FormField, FormItem, FormLabel, FormMessage 
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, Heart, Eye, EyeOff } from 'lucide-react';
+
+// --- Validation Schemas ---
+const signInSchema = z.object({
+  email: z.string().email({ message: "Format email tidak valid." }),
+  password: z.string().min(1, { message: "Password tidak boleh kosong." }),
+});
+
+const signUpSchema = z.object({
+  fullName: z.string().min(3, { message: "Nama lengkap minimal 3 karakter." }),
+  email: z.string().email({ message: "Format email tidak valid." }),
+  password: z.string().min(8, { message: "Password minimal 8 karakter." }),
+});
+
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const { signIn, signUp, user, userProfile, isProfileLoading: loading } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const { signIn, signUp, user, userProfile, isProfileLoading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
+  // --- React Hook Form Initialization ---
+  const signInForm = useForm<z.infer<typeof signInSchema>>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  const signUpForm = useForm<z.infer<typeof signUpSchema>>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: { fullName: "", email: "", password: "" },
+  });
+
+  // --- Redirect if already logged in ---
   useEffect(() => {
-    if (user && !loading && userProfile) {
-      if (userProfile.role === 'admin' || userProfile.role === 'midwife') {
-        navigate('/admin');
-      } else {
-        navigate('/dashboard');
-      }
+    if (user && !isProfileLoading && userProfile) {
+      const targetPath = userProfile.role === 'admin' || userProfile.role === 'midwife' ? '/admin' : '/dashboard';
+      navigate(targetPath);
     }
-  }, [user, loading, userProfile, navigate]);
+  }, [user, isProfileLoading, userProfile, navigate]);
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // --- Error Message Mapper ---
+  const mapAuthError = (message: string): string => {
+    if (message.includes('Invalid login credentials')) {
+      return 'Email atau password yang Anda masukkan salah. Silakan periksa kembali.';
+    }
+    if (message.includes('User already registered')) {
+      return 'Email ini sudah terdaftar. Silakan gunakan email lain atau masuk.';
+    }
+    if (message.includes('Unable to validate email address')) {
+      return 'Format email tidak valid. Mohon periksa kembali penulisan email Anda.';
+    }
+    if (message.includes('Password should be at least 8 characters')) {
+        return 'Password harus memiliki minimal 8 karakter.';
+    }
+    return 'Terjadi kesalahan yang tidak diketahui. Silakan coba beberapa saat lagi.';
+  };
+
+  // --- Form Submit Handlers ---
+  const handleSignIn = async (values: z.infer<typeof signInSchema>) => {
     setIsLoading(true);
-    
     try {
-      await signIn(email, password);
-      // The useEffect will handle the redirect
+      const { error } = await signIn(values.email, values.password);
+      if (error) {
+        throw error;
+      }
+      // The useEffect will handle the redirect on successful sign-in
+    } catch (error: any) {
+      toast({
+        title: "Gagal Masuk",
+        description: mapAuthError(error.message),
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSignUp = async (values: z.infer<typeof signUpSchema>) => {
     setIsLoading(true);
-    
     try {
-      const { error } = await signUp(email, password, fullName);
-      if (!error) {
-        // User will be redirected after email confirmation
+      const { error } = await signUp(values.email, values.password, values.fullName);
+      if (error) {
+        throw error;
       }
+      toast({
+        title: "Pendaftaran Berhasil!",
+        description: "Akun Anda telah dibuat. Silakan cek email Anda untuk verifikasi.",
+      });
+      // Reset form and switch to sign-in tab
+      signUpForm.reset();
+      // Consider switching tabs here if you have a way to control the Tabs component state
+    } catch (error: any) {
+      toast({
+        title: "Pendaftaran Gagal",
+        description: mapAuthError(error.message),
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (loading) {
+  if (isProfileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -79,96 +145,149 @@ export default function Auth() {
             <TabsTrigger value="signup">Daftar</TabsTrigger>
           </TabsList>
 
+          {/* Sign In Tab */}
           <TabsContent value="signin">
             <Card>
               <CardHeader>
                 <CardTitle>Masuk ke Akun Anda</CardTitle>
-                <CardDescription>
-                  Masukkan email dan password untuk melanjutkan
-                </CardDescription>
+                <CardDescription>Masukkan email dan password untuk melanjutkan</CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSignIn} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
-                    <Input
-                      id="signin-email"
-                      type="email"
-                      placeholder="nama@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
+                <Form {...signInForm}>
+                  <form onSubmit={signInForm.handleSubmit(handleSignIn)} className="space-y-4">
+                    <FormField
+                      control={signInForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="nama@email.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
-                    <Input
-                      id="signin-password"
-                      type="password"
-                      placeholder="Password Anda"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
+                    <FormField
+                      control={signInForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <div className="relative">
+                            <FormControl>
+                              <Input 
+                                type={showPassword ? 'text' : 'password'} 
+                                placeholder="Password Anda" 
+                                {...field} 
+                                className="pr-10"
+                              />
+                            </FormControl>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-4 w-4" aria-hidden="true" />
+                              ) : (
+                                <Eye className="h-4 w-4" aria-hidden="true" />
+                              )}
+                              <span className="sr-only">{showPassword ? "Sembunyikan password" : "Tampilkan password"}</span>
+                            </Button>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Masuk
-                  </Button>
-                </form>
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Masuk
+                    </Button>
+                  </form>
+                </Form>
               </CardContent>
             </Card>
           </TabsContent>
 
+          {/* Sign Up Tab */}
           <TabsContent value="signup">
             <Card>
               <CardHeader>
                 <CardTitle>Buat Akun Baru</CardTitle>
-                <CardDescription>
-                  Daftarkan diri Anda untuk memulai skrining
-                </CardDescription>
+                <CardDescription>Daftarkan diri Anda untuk memulai skrining</CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">Nama Lengkap</Label>
-                    <Input
-                      id="signup-name"
-                      type="text"
-                      placeholder="Nama lengkap Anda"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      required
+                <Form {...signUpForm}>
+                  <form onSubmit={signUpForm.handleSubmit(handleSignUp)} className="space-y-4">
+                    <FormField
+                      control={signUpForm.control}
+                      name="fullName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nama Lengkap</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Nama lengkap Anda" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="nama@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
+                    <FormField
+                      control={signUpForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="nama@email.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder="Minimal 8 karakter"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      minLength={8}
+                    <FormField
+                      control={signUpForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <div className="relative">
+                            <FormControl>
+                              <Input 
+                                type={showPassword ? 'text' : 'password'} 
+                                placeholder="Minimal 8 karakter" 
+                                {...field} 
+                                className="pr-10"
+                              />
+                            </FormControl>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-4 w-4" aria-hidden="true" />
+                              ) : (
+                                <Eye className="h-4 w-4" aria-hidden="true" />
+                              )}
+                              <span className="sr-only">{showPassword ? "Sembunyikan password" : "Tampilkan password"}</span>
+                            </Button>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Daftar
-                  </Button>
-                </form>
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Daftar
+                    </Button>
+                  </form>
+                </Form>
               </CardContent>
             </Card>
           </TabsContent>

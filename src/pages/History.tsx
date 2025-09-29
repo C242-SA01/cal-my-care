@@ -5,13 +5,15 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { History as HistoryIcon, Loader2, AlertTriangle, FileText, ChevronRight } from "lucide-react";
+import { History as HistoryIcon, Loader2, AlertTriangle, FileText, ChevronRight, MessageSquare } from "lucide-react";
 
 interface ScreeningHistory {
   id: string;
   completed_at: string;
   total_score: number;
   anxiety_level: 'minimal' | 'mild' | 'moderate' | 'severe';
+  status: 'completed' | 'reviewed';
+  notes: string | null;
 }
 
 const badgeColorMap: { [key: string]: string } = {
@@ -35,9 +37,9 @@ const History = () => {
       try {
         const { data, error } = await supabase
           .from("screenings")
-          .select("id, completed_at, total_score, anxiety_level")
+          .select("id, completed_at, total_score, anxiety_level, status, notes")
           .eq("user_id", user.id)
-          .eq("status", "completed")
+          .in("status", ["completed", "reviewed"])
           .order("completed_at", { ascending: false });
 
         if (error) throw error;
@@ -103,7 +105,15 @@ const History = () => {
                         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
                       })}
                     </p>
-                    <p className="text-sm text-muted-foreground">Skor: {item.total_score} / 21</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-sm text-muted-foreground">Skor: {item.total_score} / 21</p>
+                      {item.status === 'reviewed' && (
+                        <Badge variant="secondary" className="text-xs bg-primary/10 text-primary hover:bg-primary/20">
+                          <MessageSquare className="h-3 w-3 mr-1.5" />
+                          Telah Ditinjau
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <Badge className={`capitalize ${badgeColorMap[item.anxiety_level]}`}>

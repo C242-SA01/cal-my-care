@@ -1,6 +1,6 @@
 -- First, drop the old functions because their return signatures are changing.
-DROP FUNCTION IF EXISTS public.get_all_screening_results();
-DROP FUNCTION IF EXISTS public.get_screening_details(uuid);
+DROP FUNCTION IF EXISTS public.get_all_screening_results() CASCADE;
+DROP FUNCTION IF EXISTS public.get_screening_details(uuid) CASCADE;
 
 -- Create the get_all_screening_results function with the new signature
 CREATE FUNCTION public.get_all_screening_results()
@@ -58,7 +58,7 @@ RETURNS TABLE (
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $
+AS $$
 BEGIN
     -- WORKAROUND: Role check disabled as 'role' column is missing from profiles table.
     RETURN QUERY

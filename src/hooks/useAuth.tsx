@@ -116,11 +116,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUserProfile(null);
   };
 
-  const refreshUserProfile = async () => {
+  const refreshUserProfile = useCallback(async () => {
     if (user) {
       await fetchProfile(user);
     }
-  };
+  }, [user, fetchProfile]);
 
   const value = {
     user,

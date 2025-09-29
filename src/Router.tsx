@@ -1,4 +1,10 @@
-import { Route, Routes, Navigate, Outlet, BrowserRouter } from "react-router-dom";
+import {
+  Route,
+  Routes,
+  Navigate,
+  Outlet,
+  BrowserRouter,
+} from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -18,13 +24,13 @@ import PatientManagement from "./components/admin/PatientManagement";
 import PatientDetail from "./components/admin/PatientDetail";
 import EducationManagement from "./components/admin/EducationManagement";
 import ScreeningManagement from "./components/admin/ScreeningManagement";
+import AdminUserManagementPage from "./pages/AdminUserManagement";
 
 // Patient Pages
 import History from "./pages/History";
 import Education from "./pages/Education";
 import EducationDetail from "./pages/EducationDetail";
 import Profile from "./pages/Profile";
-
 
 // --- Layouts and Route Guards ---
 
@@ -48,7 +54,8 @@ const AuthenticatedRoute = () => {
  */
 const AdminRouteGuard = () => {
   const { userProfile } = useAuth();
-  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'midwife';
+  const isAdmin =
+    userProfile?.role === "admin" || userProfile?.role === "midwife";
   return isAdmin ? <AdminLayout /> : <Navigate to="/dashboard" replace />;
 };
 
@@ -58,10 +65,10 @@ const AdminRouteGuard = () => {
  */
 const PatientRouteGuard = () => {
   const { userProfile } = useAuth();
-  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'midwife';
+  const isAdmin =
+    userProfile?.role === "admin" || userProfile?.role === "midwife";
   return !isAdmin ? <PatientLayout /> : <Navigate to="/admin" replace />;
 };
-
 
 // --- Main App Router ---
 const Router = () => {
@@ -94,6 +101,7 @@ const Router = () => {
             <Route path="patient/:id" element={<PatientDetail />} />
             <Route path="education" element={<EducationManagement />} />
             <Route path="results" element={<ScreeningManagement />} />
+            <Route path="users" element={<AdminUserManagementPage />} />
           </Route>
 
           {/* Regular User/Patient Routes */}

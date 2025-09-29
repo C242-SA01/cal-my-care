@@ -73,6 +73,16 @@ const SidebarContent = ({ onLinkClick }: SidebarContentProps) => {
             <LineChart className="h-4 w-4" />
             Hasil Skrining
           </NavLink>
+          <NavLink
+            to="/admin/users"
+            onClick={handleLinkClick}
+            className={({ isActive }) =>
+              `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`
+            }
+          >
+            <Users className="h-4 w-4" />
+            Manajemen Pengguna
+          </NavLink>
         </nav>
       </div>
       <div className="mt-auto p-4">

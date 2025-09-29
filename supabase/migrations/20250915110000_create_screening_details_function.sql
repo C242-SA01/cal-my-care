@@ -1,3 +1,5 @@
+DROP FUNCTION IF EXISTS public.get_screening_details(uuid) CASCADE;
+
 CREATE OR REPLACE FUNCTION public.get_screening_details(p_screening_id uuid)
 RETURNS TABLE (
     id uuid,
@@ -14,7 +16,7 @@ RETURNS TABLE (
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS '
+AS $$
 BEGIN
     -- WORKAROUND: Role check disabled as 'role' column is missing from profiles table.
     RETURN QUERY
@@ -42,6 +44,6 @@ BEGIN
     ORDER BY
         gq.question_order ASC;
 END;
-';
+$$;
 
 GRANT EXECUTE ON FUNCTION public.get_screening_details(uuid) TO authenticated;
