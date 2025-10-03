@@ -24,18 +24,20 @@ const getAnxietyText = (level: string | null) => {
 // Helper to convert YouTube watch URL to embed URL
 const getEmbedUrl = (url: string | null) => {
   if (!url) return null;
-  try {
-    const urlObj = new URL(url);
-    if (urlObj.hostname === "www.youtube.com" || urlObj.hostname === "youtube.com") {
-      const videoId = urlObj.searchParams.get("v");
-      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
-    }
-    // Add other video platforms here if needed
-    return url; // Fallback for other URLs
-  } catch (error) {
-    console.error("Invalid video URL:", error);
-    return null;
+
+  // Regex to capture video ID from various YouTube URL formats
+  const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  
+  const match = url.match(youtubeRegex);
+
+  if (match && match[1]) {
+    const videoId = match[1];
+    return `https://www.youtube.com/embed/${videoId}`;
   }
+
+  // If it's not a valid YouTube video URL, return null to prevent rendering a broken iframe.
+  console.warn("Invalid or unsupported video URL:", url);
+  return null;
 };
 
 const EducationDetail = () => {

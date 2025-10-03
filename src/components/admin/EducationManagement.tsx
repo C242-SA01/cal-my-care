@@ -33,6 +33,17 @@ import {
 import { EducationForm } from "./EducationForm";
 import * as z from "zod";
 
+// Helper to convert YouTube watch URL to embed URL
+const getEmbedUrl = (url: string | null) => {
+  if (!url) return null;
+  const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const match = url.match(youtubeRegex);
+  if (match && match[1]) {
+    return `https://www.youtube.com/embed/${match[1]}`;
+  }
+  return null;
+};
+
 // Simplified Zod schema
 const formSchema = z.object({
   title: z.string().min(1, "Judul harus diisi"),
@@ -275,8 +286,23 @@ const EducationManagement = () => {
             materials.map((material) => (
               <Card key={material.id} className="flex flex-col">
                 <CardHeader>
-                  {material.image_url && (
-                    <img src={material.image_url} alt={material.title} className="rounded-lg aspect-video object-cover mb-4" />
+                  {material.material_type === 'video' ? (
+                    getEmbedUrl(material.video_url) && (
+                      <div className="aspect-video mb-4">
+                        <iframe
+                          src={getEmbedUrl(material.video_url)!}
+                          title={material.title}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="w-full h-full rounded-lg"
+                        ></iframe>
+                      </div>
+                    )
+                  ) : (
+                    material.image_url && (
+                      <img src={material.image_url} alt={material.title} className="rounded-lg aspect-video object-cover mb-4" />
+                    )
                   )}
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-lg leading-tight">{material.title}</CardTitle>

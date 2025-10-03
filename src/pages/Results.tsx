@@ -33,7 +33,19 @@ interface EducationalMaterial {
   title: string;
   content: string;
   material_type: string;
+  image_url: string | null;
+  video_url: string | null;
 }
+
+const getYouTubeThumbnail = (url: string | null) => {
+  if (!url) return null;
+  const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const match = url.match(youtubeRegex);
+  if (match && match[1]) {
+    return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`;
+  }
+  return null;
+};
 
 export default function Results() {
   const { user, loading } = useAuth();
@@ -306,19 +318,32 @@ export default function Results() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {recommendations.map((material) => (
-                  <div
+                  <Card
                     key={material.id}
-                    className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => navigate('/education', { state: { materialId: material.id } })}
+                    className="flex flex-col hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+                    onClick={() => navigate(`/education/${material.id}`)}
                   >
-                    <h4 className="font-semibold mb-2">{material.title}</h4>
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-3">
-                      {material.content.substring(0, 100)}...
-                    </p>
-                    <Badge variant="secondary" className="text-xs">
-                      {material.material_type}
-                    </Badge>
-                  </div>
+                    <CardHeader className="p-0">
+                      <img 
+                        src={
+                          material.material_type === 'video' 
+                            ? getYouTubeThumbnail(material.video_url) || 'https://via.placeholder.com/400x225?text=Video'
+                            : material.image_url || 'https://via.placeholder.com/400x225?text=CalMyCare'
+                        } 
+                        alt={material.title} 
+                        className="rounded-t-lg aspect-video object-cover"
+                      />
+                    </CardHeader>
+                    <div className="p-4 flex flex-col flex-grow">
+                      <CardTitle className="text-sm font-semibold leading-tight mb-2 line-clamp-2">{material.title}</CardTitle>
+                      <div className="flex-grow" />
+                      <CardFooter className="p-0 pt-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {material.material_type}
+                        </Badge>
+                      </CardFooter>
+                    </div>
+                  </Card>
                 ))}
               </div>
             </CardContent>
