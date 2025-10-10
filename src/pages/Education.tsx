@@ -1,10 +1,16 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useNavigate } from 'react-router-dom';
-import { BookOpen, Video, FileText, AlertTriangle } from 'lucide-react';
-import { toPublicImageUrl } from '@/lib/utils';
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
+import { BookOpen, Video, FileText, AlertTriangle } from "lucide-react";
+import { toPublicImageUrl } from "@/lib/utils";
 interface Material {
   id: string;
   title: string;
@@ -16,13 +22,14 @@ interface Material {
 }
 
 const getAnxietyText = (level: string | null) => {
-  if (!level) return 'Semua Level';
+  if (!level) return "Semua Level";
   return level.charAt(0).toUpperCase() + level.slice(1);
 };
 
 const getYouTubeThumbnail = (url: string | null) => {
   if (!url) return null;
-  const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const youtubeRegex =
+    /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
   const match = url.match(youtubeRegex);
   if (match && match[1]) {
     return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`;
@@ -39,17 +46,26 @@ const Education = () => {
     const fetchMaterials = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase.from('educational_materials').select('id, title, content, material_type, anxiety_level, image_url, video_url').eq('is_published', true).order('created_at', { ascending: false });
+        const { data, error } = await supabase
+          .from("educational_materials")
+          .select(
+            "id, title, content, material_type, anxiety_level, image_url, video_url"
+          )
+          .eq("is_published", true)
+          .order("created_at", { ascending: false });
 
         if (error) throw error;
-        const normalized = (data || []).map((m: any) => ({
-          ...m,
-          image_url: toPublicImageUrl(supabase, m.image_url, 'educational_materials'),
-        }));
-
+        const normalized = (data || []).map((m: any) => {
+          const finalUrl = toPublicImageUrl(
+            supabase,
+            m.image_url,
+            "educational_materials"
+          );
+          return { ...m, image_url: finalUrl };
+        });
         setMaterials(normalized);
       } catch (error) {
-        console.error('Error fetching materials:', error);
+        console.error("Error fetching materials:", error);
       } finally {
         setLoading(false);
       }
@@ -93,28 +109,62 @@ const Education = () => {
         <div className="flex flex-col items-center justify-center text-center py-16 border-2 border-dashed rounded-lg">
           <AlertTriangle className="h-12 w-12 text-muted-foreground mb-4" />
           <h2 className="text-xl font-semibold">Belum Ada Materi</h2>
-          <p className="text-muted-foreground mt-2">Saat ini belum ada materi edukasi yang tersedia. Silakan cek kembali nanti.</p>
+          <p className="text-muted-foreground mt-2">
+            Saat ini belum ada materi edukasi yang tersedia. Silakan cek kembali
+            nanti.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {materials.map((material) => (
-            <Card key={material.id} className="flex flex-col hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => navigate(`/education/${material.id}`)}>
+            <Card
+              key={material.id}
+              className="flex flex-col hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+              onClick={() => navigate(`/education/${material.id}`)}
+            >
               <CardHeader className="p-0">
                 <img
-                  src={material.material_type === 'video' ? getYouTubeThumbnail(material.video_url) || 'https://via.placeholder.com/400x225?text=Video' : material.image_url || 'https://via.placeholder.com/400x225?text=CalMyCare'}
+                  src={
+                    material.material_type === "video"
+                      ? getYouTubeThumbnail(material.video_url) ||
+                        "https://via.placeholder.com/400x225?text=Video"
+                      : material.image_url ||
+                        "https://via.placeholder.com/400x225?text=CalMyCare"
+                  }
                   alt={material.title}
                   className="rounded-t-lg aspect-video object-cover"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src =
+                      "https://via.placeholder.com/400x225?text=CalMyCare";
+                  }}
                 />
               </CardHeader>
               <div className="p-4 flex flex-col flex-grow">
-                <CardTitle className="text-base font-semibold leading-tight mb-2 line-clamp-2">{material.title}</CardTitle>
+                <CardTitle className="text-base font-semibold leading-tight mb-2 line-clamp-2">
+                  {material.title}
+                </CardTitle>
                 <div className="flex-grow">
-                  <p className="text-sm text-muted-foreground line-clamp-3">{material.content}</p>
+                  <p className="text-sm text-muted-foreground line-clamp-3">
+                    {material.content}
+                  </p>
                 </div>
                 <CardFooter className="p-0 pt-4 flex justify-between items-center">
-                  <Badge variant="outline">{getAnxietyText(material.anxiety_level)}</Badge>
-                  <Badge variant={material.material_type === 'video' ? 'secondary' : 'outline'} className="flex items-center">
-                    {material.material_type === 'video' ? <Video className="h-3 w-3 mr-1.5" /> : <FileText className="h-3 w-3 mr-1.5" />}
+                  <Badge variant="outline">
+                    {getAnxietyText(material.anxiety_level)}
+                  </Badge>
+                  <Badge
+                    variant={
+                      material.material_type === "video"
+                        ? "secondary"
+                        : "outline"
+                    }
+                    className="flex items-center"
+                  >
+                    {material.material_type === "video" ? (
+                      <Video className="h-3 w-3 mr-1.5" />
+                    ) : (
+                      <FileText className="h-3 w-3 mr-1.5" />
+                    )}
                     {material.material_type}
                   </Badge>
                 </CardFooter>
