@@ -21,8 +21,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
+import { useCallback, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
-// Simplified Zod schema
+// Zod schema updated to handle file uploads
 const formSchema = z.object({
   title: z.string().min(1, "Judul harus diisi"),
   content: z.string().min(1, "Konten harus diisi"),
@@ -30,16 +32,38 @@ const formSchema = z.object({
   anxiety_level: z.string().optional(),
   video_url: z.string().optional(),
   image_url: z.string().optional(),
+  image_file: z.any().optional(), // Field for the new file upload
   is_published: z.boolean(),
 });
 
 interface EducationFormProps {
   onSubmit: (values: z.infer<typeof formSchema>) => Promise<void>;
-  initialData?: Partial<z.infer<typeof formSchema>>;
+  initialData?: Partial<z.infer<typeof formSchema>> & { id?: string };
   isSubmitting: boolean;
 }
 
-export const EducationForm = ({ onSubmit, initialData, isSubmitting }: EducationFormProps) => {
+// Helper to get the public URL for image preview
+const getPublicImageUrl = (path: string | null) => {
+  if (!path) return null;
+  if (path.startsWith("http")) return path;
+  try {
+    const { data } = supabase.storage.from("educational_materials").getPublicUrl(path);
+    return data?.publicUrl;
+  } catch (error) {
+    console.error("Error getting public image URL:", error);
+    return null;
+  }
+};
+
+export const EducationForm = ({
+  onSubmit,
+  initialData,
+  isSubmitting,
+}: EducationFormProps) => {
+  const draftKey = initialData?.id
+    ? `education-form-draft-${initialData.id}`
+    : "education-form-draft-new";
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
@@ -53,11 +77,45 @@ export const EducationForm = ({ onSubmit, initialData, isSubmitting }: Education
     },
   });
 
+  // This functionality is now less relevant with file uploads but kept for other fields
+  useEffect(() => {
+    const savedDraft = localStorage.getItem(draftKey);
+    if (savedDraft) {
+      try {
+        const draftData = JSON.parse(savedDraft);
+        // Don't restore file inputs from draft
+        delete draftData.image_file;
+        form.reset(draftData);
+      } catch (error) {
+        console.error("Failed to parse draft data:", error);
+      }
+    }
+  }, [form, draftKey]);
+
+  const watchedValues = form.watch();
+  useEffect(() => {
+    // Don't save file objects in localStorage
+    const { image_file, ...rest } = watchedValues;
+    localStorage.setItem(draftKey, JSON.stringify(rest));
+  }, [watchedValues, draftKey]);
+
+  const handleFormSubmit = useCallback(
+    async (values: z.infer<typeof formSchema>) => {
+      await onSubmit(values);
+      form.reset();
+    },
+    [onSubmit, form]
+  );
+
   const materialType = form.watch("material_type");
+  const currentImageUrl = getPublicImageUrl(initialData?.image_url ?? null);
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form
+        onSubmit={form.handleSubmit(handleFormSubmit)}
+        className="space-y-4"
+      >
         <FormField
           control={form.control}
           name="title"
@@ -78,7 +136,7 @@ export const EducationForm = ({ onSubmit, initialData, isSubmitting }: Education
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tipe Materi</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue />
@@ -100,7 +158,7 @@ export const EducationForm = ({ onSubmit, initialData, isSubmitting }: Education
           render={({ field }) => (
             <FormItem>
               <FormLabel>Target Tingkat Kecemasan</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value ?? "all"}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih tingkat kecemasan" />
@@ -126,7 +184,11 @@ export const EducationForm = ({ onSubmit, initialData, isSubmitting }: Education
             <FormItem>
               <FormLabel>Konten</FormLabel>
               <FormControl>
-                <Textarea placeholder="Masukkan konten materi edukasi" rows={6} {...field} />
+                <Textarea
+                  placeholder="Masukkan konten materi edukasi"
+                  rows={6}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -141,7 +203,10 @@ export const EducationForm = ({ onSubmit, initialData, isSubmitting }: Education
               <FormItem>
                 <FormLabel>URL Video</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://youtube.com/watch?v=..." {...field} />
+                  <Input
+                    placeholder="https://youtube.com/watch?v=..."
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -149,14 +214,27 @@ export const EducationForm = ({ onSubmit, initialData, isSubmitting }: Education
           />
         )}
 
+        {/* Image preview for existing images */}
+        {currentImageUrl && (
+          <div className="space-y-2">
+            <FormLabel>Gambar Saat Ini</FormLabel>
+            <img src={currentImageUrl} alt="Preview" className="w-full h-auto max-h-48 object-cover rounded-md border" />
+          </div>
+        )}
+
+        {/* New file upload field */}
         <FormField
           control={form.control}
-          name="image_url"
+          name="image_file"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>URL Gambar</FormLabel>
+              <FormLabel>{currentImageUrl ? "Ganti Gambar" : "Unggah Gambar"}</FormLabel>
               <FormControl>
-                <Input placeholder="https://example.com/image.jpg" {...field} />
+                <Input 
+                  type="file" 
+                  accept="image/png, image/jpeg, image/webp"
+                  onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

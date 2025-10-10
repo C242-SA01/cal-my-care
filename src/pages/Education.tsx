@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Video, FileText, AlertTriangle } from 'lucide-react';
-
+import { toPublicImageUrl } from '@/lib/utils';
 interface Material {
   id: string;
   title: string;
@@ -42,7 +42,12 @@ const Education = () => {
         const { data, error } = await supabase.from('educational_materials').select('id, title, content, material_type, anxiety_level, image_url, video_url').eq('is_published', true).order('created_at', { ascending: false });
 
         if (error) throw error;
-        setMaterials(data || []);
+        const normalized = (data || []).map((m: any) => ({
+          ...m,
+          image_url: toPublicImageUrl(supabase, m.image_url, 'educational_materials'),
+        }));
+
+        setMaterials(normalized);
       } catch (error) {
         console.error('Error fetching materials:', error);
       } finally {

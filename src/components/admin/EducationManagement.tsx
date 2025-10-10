@@ -1,37 +1,17 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Plus, Edit, Trash2, Video, FileText, Search, MoreVertical } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { EducationForm } from "./EducationForm";
-import * as z from "zod";
+import { toPublicImageUrl } from '@/lib/utils';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Plus, Edit, Trash2, Video, FileText, Search, MoreVertical } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { EducationForm } from './EducationForm';
+import * as z from 'zod';
 
 // Helper to convert YouTube watch URL to embed URL
 const getEmbedUrl = (url: string | null) => {
@@ -46,9 +26,9 @@ const getEmbedUrl = (url: string | null) => {
 
 // Simplified Zod schema
 const formSchema = z.object({
-  title: z.string().min(1, "Judul harus diisi"),
-  content: z.string().min(1, "Konten harus diisi"),
-  material_type: z.enum(["article", "video"]),
+  title: z.string().min(1, 'Judul harus diisi'),
+  content: z.string().min(1, 'Konten harus diisi'),
+  material_type: z.enum(['article', 'video']),
   anxiety_level: z.string().optional(),
   video_url: z.string().optional(),
   image_url: z.string().optional(),
@@ -68,14 +48,23 @@ interface EducationalMaterial {
   created_by: string | null;
 }
 
+const DIALOG_OPEN_STORAGE_KEY = 'education-dialog-open';
+
 const EducationManagement = () => {
   const [materials, setMaterials] = useState<EducationalMaterial[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingMaterial, setEditingMaterial] = useState<EducationalMaterial | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(() => {
+    const storedValue = localStorage.getItem(DIALOG_OPEN_STORAGE_KEY);
+    return storedValue ? JSON.parse(storedValue) : false;
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
+
+  useEffect(() => {
+    localStorage.setItem(DIALOG_OPEN_STORAGE_KEY, JSON.stringify(isDialogOpen));
+  }, [isDialogOpen]);
 
   useEffect(() => {
     fetchMaterials();
@@ -84,25 +73,27 @@ const EducationManagement = () => {
   const fetchMaterials = async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from("educational_materials")
-        .select("*")
-        .order("created_at", { ascending: false });
+      let query = supabase.from('educational_materials').select('*').order('created_at', { ascending: false });
 
       if (searchTerm) {
-        query = query.ilike("title", `%${searchTerm}%`);
+        query = query.ilike('title', `%${searchTerm}%`);
       }
 
       const { data, error } = await query;
-
       if (error) throw error;
-      setMaterials(data || []);
+
+      const normalized = (data || []).map((m: any) => ({
+        ...m,
+        image_url: toPublicImageUrl(supabase, m.image_url, 'educational_materials'),
+      }));
+
+      setMaterials(normalized);
     } catch (error) {
-      console.error("Error fetching materials:", error);
+      console.error('Error fetching materials:', error);
       toast({
-        title: "Error",
-        description: "Gagal memuat materi edukasi",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Gagal memuat materi edukasi',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -124,51 +115,75 @@ const EducationManagement = () => {
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
+    const draftKey = editingMaterial?.id ? `education-form-draft-${editingMaterial.id}` : 'education-form-draft-new';
+
     try {
       const { data: userData } = await supabase.auth.getUser();
-      
+      let imageUrl = editingMaterial?.image_url || '';
+
+      // Handle file upload if a new image is provided
+      if (values.image_file) {
+        const file = values.image_file as File;
+        const fileName = `${Date.now()}_${file.name}`;
+        // CORRECTED: Do not add 'public/' prefix. Upload to the root of the bucket.
+        const filePath = fileName;
+
+        const { error: uploadError } = await supabase.storage.from('educational_materials').upload(filePath, file);
+
+        if (uploadError) {
+          throw new Error(`Gagal mengunggah gambar: ${uploadError.message}`);
+        }
+
+        // Immediately get the public URL and store that instead of the path
+        const { data: urlData } = supabase.storage.from('educational_materials').getPublicUrl(filePath);
+
+        if (!urlData) {
+          throw new Error('Gagal mendapatkan URL publik setelah unggah.');
+        }
+        imageUrl = urlData.publicUrl;
+      }
+
       const materialData = {
-        ...values,
+        title: values.title,
+        content: values.content,
+        material_type: values.material_type,
         anxiety_level: values.anxiety_level === 'all' ? null : values.anxiety_level,
         video_url: values.video_url || null,
-        image_url: values.image_url || null,
+        image_url: imageUrl || null,
+        is_published: values.is_published,
         created_by: userData.user?.id,
       };
 
       if (editingMaterial) {
-        const { error } = await supabase
-          .from("educational_materials")
-          .update(materialData)
-          .eq("id", editingMaterial.id);
+        const { error } = await supabase.from('educational_materials').update(materialData).eq('id', editingMaterial.id);
 
         if (error) throw error;
-        
+
         toast({
-          title: "Berhasil",
-          description: "Materi edukasi berhasil diperbarui",
+          title: 'Berhasil',
+          description: 'Materi edukasi berhasil diperbarui',
         });
       } else {
-        const { error } = await supabase
-          .from("educational_materials")
-          .insert([materialData]);
+        const { error } = await supabase.from('educational_materials').insert([materialData]);
 
         if (error) throw error;
-        
+
         toast({
-          title: "Berhasil",
-          description: "Materi edukasi berhasil ditambahkan",
+          title: 'Berhasil',
+          description: 'Materi edukasi berhasil ditambahkan',
         });
       }
 
+      localStorage.removeItem(draftKey);
       setIsDialogOpen(false);
       setEditingMaterial(null);
       fetchMaterials();
     } catch (error) {
-      console.error("Error saving material:", error);
+      console.error('Error saving material:', error);
       toast({
-        title: "Error",
-        description: "Gagal menyimpan materi edukasi",
-        variant: "destructive",
+        title: 'Error',
+        description: `Gagal menyimpan materi edukasi: ${error.message}`,
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -177,41 +192,38 @@ const EducationManagement = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from("educational_materials")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from('educational_materials').delete().eq('id', id);
 
       if (error) throw error;
-      
+
       toast({
-        title: "Berhasil",
-        description: "Materi edukasi berhasil dihapus",
+        title: 'Berhasil',
+        description: 'Materi edukasi berhasil dihapus',
       });
-      
+
       fetchMaterials();
     } catch (error) {
-      console.error("Error deleting material:", error);
+      console.error('Error deleting material:', error);
       toast({
-        title: "Error",
-        description: "Gagal menghapus materi edukasi",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Gagal menghapus materi edukasi',
+        variant: 'destructive',
       });
     }
   };
 
   const getAnxietyText = (level: string | null) => {
     switch (level) {
-      case "minimal":
-        return "Minimal";
-      case "mild":
-        return "Ringan";
-      case "moderate":
-        return "Sedang";
-      case "severe":
-        return "Berat";
+      case 'minimal':
+        return 'Minimal';
+      case 'mild':
+        return 'Ringan';
+      case 'moderate':
+        return 'Sedang';
+      case 'severe':
+        return 'Berat';
       default:
-        return "Semua Level";
+        return 'Semua Level';
     }
   };
 
@@ -221,12 +233,17 @@ const EducationManagement = () => {
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle>Manajemen Materi Edukasi</CardTitle>
-            <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
-              setIsDialogOpen(isOpen);
-              if (!isOpen) {
-                setEditingMaterial(null);
-              }
-            }}>
+            <Dialog
+              open={isDialogOpen}
+              onOpenChange={(isOpen) => {
+                if (!isOpen) {
+                  const draftKey = editingMaterial?.id ? `education-form-draft-${editingMaterial.id}` : 'education-form-draft-new';
+                  localStorage.removeItem(draftKey);
+                  setEditingMaterial(null);
+                }
+                setIsDialogOpen(isOpen);
+              }}
+            >
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
@@ -235,18 +252,20 @@ const EducationManagement = () => {
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>
-                    {editingMaterial ? "Edit Materi Edukasi" : "Tambah Materi Edukasi"}
-                  </DialogTitle>
+                  <DialogTitle>{editingMaterial ? 'Edit Materi Edukasi' : 'Tambah Materi Edukasi'}</DialogTitle>
                 </DialogHeader>
-                <EducationForm 
-                  onSubmit={handleSubmit} 
-                  initialData={editingMaterial ? {
-                    ...editingMaterial,
-                    anxiety_level: editingMaterial.anxiety_level || "all",
-                    video_url: editingMaterial.video_url || "",
-                    image_url: editingMaterial.image_url || "",
-                  } : undefined}
+                <EducationForm
+                  onSubmit={handleSubmit}
+                  initialData={
+                    editingMaterial
+                      ? {
+                          ...editingMaterial,
+                          anxiety_level: editingMaterial.anxiety_level || 'all',
+                          video_url: editingMaterial.video_url || '',
+                          image_url: editingMaterial.image_url || '',
+                        }
+                      : undefined
+                  }
                   isSubmitting={isSubmitting}
                 />
               </DialogContent>
@@ -256,12 +275,7 @@ const EducationManagement = () => {
         <CardContent>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Cari materi..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+            <Input placeholder="Cari materi..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
           </div>
         </CardContent>
       </Card>
@@ -270,9 +284,16 @@ const EducationManagement = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(3)].map((_, i) => (
             <Card key={i} className="animate-pulse">
-              <CardHeader><div className="h-8 bg-muted rounded w-3/4"></div></CardHeader>
-              <CardContent><div className="h-4 bg-muted rounded w-full mb-2"></div><div className="h-4 bg-muted rounded w-5/6"></div></CardContent>
-              <CardFooter><div className="h-8 bg-muted rounded w-1/4"></div></CardFooter>
+              <CardHeader>
+                <div className="h-8 bg-muted rounded w-3/4"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-4 bg-muted rounded w-full mb-2"></div>
+                <div className="h-4 bg-muted rounded w-5/6"></div>
+              </CardContent>
+              <CardFooter>
+                <div className="h-8 bg-muted rounded w-1/4"></div>
+              </CardFooter>
             </Card>
           ))}
         </div>
@@ -286,24 +307,20 @@ const EducationManagement = () => {
             materials.map((material) => (
               <Card key={material.id} className="flex flex-col">
                 <CardHeader>
-                  {material.material_type === 'video' ? (
-                    getEmbedUrl(material.video_url) && (
-                      <div className="aspect-video mb-4">
-                        <iframe
-                          src={getEmbedUrl(material.video_url)!}
-                          title={material.title}
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          className="w-full h-full rounded-lg"
-                        ></iframe>
-                      </div>
-                    )
-                  ) : (
-                    material.image_url && (
-                      <img src={material.image_url} alt={material.title} className="rounded-lg aspect-video object-cover mb-4" />
-                    )
-                  )}
+                  {material.material_type === 'video'
+                    ? getEmbedUrl(material.video_url) && (
+                        <div className="aspect-video mb-4">
+                          <iframe
+                            src={getEmbedUrl(material.video_url)!}
+                            title={material.title}
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            className="w-full h-full rounded-lg"
+                          ></iframe>
+                        </div>
+                      )
+                    : material.image_url && <img src={material.image_url} alt={material.title} className="rounded-lg aspect-video object-cover mb-4" />}
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-lg leading-tight">{material.title}</CardTitle>
                     <DropdownMenu>
@@ -327,15 +344,11 @@ const EducationManagement = () => {
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Tindakan ini tidak dapat dibatalkan. Ini akan menghapus materi edukasi secara permanen.
-                              </AlertDialogDescription>
+                              <AlertDialogDescription>Tindakan ini tidak dapat dibatalkan. Ini akan menghapus materi edukasi secara permanen.</AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Batal</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(material.id)}>
-                                Hapus
-                              </AlertDialogAction>
+                              <AlertDialogAction onClick={() => handleDelete(material.id)}>Hapus</AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
@@ -344,9 +357,7 @@ const EducationManagement = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="flex-grow">
-                  <p className="text-sm text-muted-foreground line-clamp-3">
-                    {material.content}
-                  </p>
+                  <p className="text-sm text-muted-foreground line-clamp-3">{material.content}</p>
                 </CardContent>
                 <CardFooter className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
@@ -356,9 +367,7 @@ const EducationManagement = () => {
                       {material.material_type}
                     </Badge>
                   </div>
-                  <Badge variant={material.is_published ? "default" : "secondary"}>
-                    {material.is_published ? "Published" : "Draft"}
-                  </Badge>
+                  <Badge variant={material.is_published ? 'default' : 'secondary'}>{material.is_published ? 'Published' : 'Draft'}</Badge>
                 </CardFooter>
               </Card>
             ))

@@ -102,6 +102,7 @@ const Router = () => {
             <Route path="education" element={<EducationManagement />} />
             <Route path="results" element={<ScreeningManagement />} />
             <Route path="users" element={<AdminUserManagementPage />} />
+            <Route path="profile" element={<Profile />} />
           </Route>
 
           {/* Regular User/Patient Routes */}

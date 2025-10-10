@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { Home, LineChart, LogOut, Package2, Users, BookOpen } from "lucide-react";
+import { Home, LineChart, LogOut, Package2, Users, BookOpen, User as UserIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -82,6 +82,16 @@ const SidebarContent = ({ onLinkClick }: SidebarContentProps) => {
           >
             <Users className="h-4 w-4" />
             Manajemen Pengguna
+          </NavLink>
+          <NavLink
+            to="/admin/profile"
+            onClick={handleLinkClick}
+            className={({ isActive }) =>
+              `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`
+            }
+          >
+            <UserIcon className="h-4 w-4" />
+            Profil
           </NavLink>
         </nav>
       </div>

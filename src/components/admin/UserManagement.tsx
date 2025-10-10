@@ -77,13 +77,13 @@ export default function UserManagement() {
   }, []);
 
   const handleRoleChange = async (targetUser: ManagedUser, action: 'grant' | 'revoke') => {
-    const newRole = action === 'grant' ? 'admin' : 'patient';
+    const grantAdmin = action === 'grant';
     const successMessage = action === 'grant' ? "Pengguna berhasil dijadikan admin." : "Status admin berhasil dicabut.";
 
     try {
-      const { error } = await supabase.rpc('update_user_role', {
+      const { error } = await supabase.rpc('set_admin_status', {
         target_user_id: targetUser.user_id,
-        new_role: newRole
+        grant_admin: grantAdmin
       });
 
       if (error) throw error;

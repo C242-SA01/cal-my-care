@@ -40,6 +40,20 @@ const getEmbedUrl = (url: string | null) => {
   return null;
 };
 
+const getPublicImageUrl = (path: string | null): string | null => {
+  if (!path) {
+    return null;
+  }
+  if (path.startsWith('http')) {
+    return path;
+  }
+  const { data } = supabase.storage
+    .from('educational_materials')
+    .getPublicUrl(path);
+  
+  return encodeURI(data.publicUrl);
+};
+
 const EducationDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -108,9 +122,10 @@ const EducationDetail = () => {
       </Button>
 
       <article className="bg-card border rounded-xl overflow-hidden">
-        {material.image_url && material.material_type !== 'video' && (
-          <img src={material.image_url} alt={material.title} className="w-full h-auto max-h-80 object-cover" />
-        )}
+        {material.image_url && material.material_type !== 'video' && (() => {
+          const imageUrl = getPublicImageUrl(material.image_url);
+          return imageUrl && <img src={imageUrl} alt={material.title} className="w-full h-auto max-h-80 object-cover" />;
+        })()}
 
         <div className="p-6 md:p-8">
           <div className="flex items-center gap-3 mb-4">
