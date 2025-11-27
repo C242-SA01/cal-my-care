@@ -578,7 +578,7 @@ export default function Auth() {
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center gap-2.5 mb-2">
-            <Heart className="h-7 w-7 text-rose-500" />
+<img src="/assets/logo-CalMyCare.png" alt="CalmyCare Logo" className="h-10 w-10" />
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-800 dark:text-slate-100">
               CalmyCare
             </h1>

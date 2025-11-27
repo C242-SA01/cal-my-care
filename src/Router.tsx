@@ -1,36 +1,37 @@
-import {
-  Route,
-  Routes,
-  Navigate,
-  Outlet,
-  BrowserRouter,
-} from "react-router-dom";
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import Screening from "./pages/Screening";
-import Results from "./pages/Results";
-import AuthConfirm from "./pages/AuthConfirm";
-import { useAuth } from "./hooks/useAuth";
-import NotFound from "./pages/NotFound";
+import { Route, Routes, Navigate, Outlet, BrowserRouter } from 'react-router-dom';
+import Index from './pages/Index';
+import Auth from './pages/Auth';
+import Dashboard from './pages/Dashboard';
+import Screening from './pages/Screening';
+import Results from './pages/Results';
+import AuthConfirm from './pages/AuthConfirm';
+import { useAuth } from './hooks/useAuth';
+import NotFound from './pages/NotFound';
 
 // Layouts
-import AdminLayout from "./layouts/AdminLayout";
-import PatientLayout from "./layouts/PatientLayout";
+import AdminLayout from './layouts/AdminLayout';
+import PatientLayout from './layouts/PatientLayout';
 
 // Admin Pages
-import AdminDashboard from "./pages/AdminDashboard";
-import PatientManagement from "./components/admin/PatientManagement";
-import PatientDetail from "./components/admin/PatientDetail";
-import EducationManagement from "./components/admin/EducationManagement";
-import ScreeningManagement from "./components/admin/ScreeningManagement";
-import AdminUserManagementPage from "./pages/AdminUserManagement";
+import AdminDashboard from './pages/AdminDashboard';
+import PatientManagement from './components/admin/PatientManagement';
+import PatientDetail from './components/admin/PatientDetail';
+import EducationManagement from './components/admin/EducationManagement';
+import ScreeningManagement from './components/admin/ScreeningManagement';
+import AdminUserManagementPage from './pages/AdminUserManagement';
 
 // Patient Pages
-import History from "./pages/History";
-import Education from "./pages/Education";
-import EducationDetail from "./pages/EducationDetail";
-import Profile from "./pages/Profile";
+import History from './pages/History';
+import Education from './pages/Education';
+import EducationDetail from './pages/EducationDetail';
+import Profile from './pages/Profile';
+
+// E-Modul Pages
+import EModulList from './pages/EModulList';
+import EModuleDetail from './pages/EModuleDetail';
+import PatientEModuleDetail from './pages/PatientEModuleDetail';
+import EModulAdminList from './pages/admin/EModulAdminList';
+import EModulAdminForm from './pages/admin/EModulAdminForm';
 
 // --- Layouts and Route Guards ---
 
@@ -54,8 +55,7 @@ const AuthenticatedRoute = () => {
  */
 const AdminRouteGuard = () => {
   const { userProfile } = useAuth();
-  const isAdmin =
-    userProfile?.role === "admin" || userProfile?.role === "midwife";
+  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'midwife';
   return isAdmin ? <AdminLayout /> : <Navigate to="/dashboard" replace />;
 };
 
@@ -65,8 +65,7 @@ const AdminRouteGuard = () => {
  */
 const PatientRouteGuard = () => {
   const { userProfile } = useAuth();
-  const isAdmin =
-    userProfile?.role === "admin" || userProfile?.role === "midwife";
+  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'midwife';
   return !isAdmin ? <PatientLayout /> : <Navigate to="/admin" replace />;
 };
 
@@ -103,6 +102,10 @@ const Router = () => {
             <Route path="results" element={<ScreeningManagement />} />
             <Route path="users" element={<AdminUserManagementPage />} />
             <Route path="profile" element={<Profile />} />
+            {/* E-Modul Admin Routes */}
+            <Route path="emodules" element={<EModulAdminList />} />
+            <Route path="emodules/new" element={<EModulAdminForm />} />
+            <Route path="emodules/:id/edit" element={<EModulAdminForm />} />
           </Route>
 
           {/* Regular User/Patient Routes */}
@@ -114,6 +117,9 @@ const Router = () => {
             <Route path="/education" element={<Education />} />
             <Route path="/education/:id" element={<EducationDetail />} />
             <Route path="/profile" element={<Profile />} />
+            {/* E-Modul Patient Route */}
+            <Route path="/emodules" element={<EModulList />} />
+            <Route path="/emodules/:id" element={<PatientEModuleDetail />} />
           </Route>
         </Route>
 

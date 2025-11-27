@@ -229,9 +229,9 @@ export default function Screening() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <Heart className="h-8 w-8 text-primary mr-3" />
+              <img src="/assets/logo-CalMyCare.png" alt="CalmyCare Logo" className="h-8 w-8 mr-3" />
               <div>
-                <h1 className="text-xl font-bold text-primary">CalMyCare</h1>
+                <h1 className="text-xl font-bold text-foreground">CalMyCare</h1>
                 <p className="text-sm text-muted-foreground">Skrining GAD-7</p>
               </div>
             </div>

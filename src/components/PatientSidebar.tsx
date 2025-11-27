@@ -1,16 +1,8 @@
-import { NavLink, useNavigate } from "react-router-dom";
-import {
-  Home,
-  BookOpen,
-  FileText,
-  History,
-  LogOut,
-  Package2,
-  User as UserIcon,
-} from "lucide-react";
-import { Button } from "./ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { NavLink, useNavigate } from 'react-router-dom';
+import { Home, BookOpen, FileText, History, LogOut, Package2, User as UserIcon } from 'lucide-react';
+import { Button } from './ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface PatientSidebarContentProps {
   onLinkClick?: () => void;
@@ -22,7 +14,7 @@ const PatientSidebarContent = ({ onLinkClick }: PatientSidebarContentProps) => {
 
   const handleLogout = async () => {
     await signOut();
-    navigate("/", { replace: true });
+    navigate('/', { replace: true });
     if (onLinkClick) onLinkClick();
   };
 
@@ -33,18 +25,19 @@ const PatientSidebarContent = ({ onLinkClick }: PatientSidebarContentProps) => {
   };
 
   const menuItems = [
-    { to: "/dashboard", icon: Home, label: "Dashboard" },
-    { to: "/screening", icon: FileText, label: "Mulai Skrining" },
-    { to: "/history", icon: History, label: "Riwayat Hasil" },
-    { to: "/education", icon: BookOpen, label: "Edukasi" },
-    { to: "/profile", icon: UserIcon, label: "Profil" },
+    { to: '/dashboard', icon: Home, label: 'Dashboard' },
+    { to: '/screening', icon: FileText, label: 'Mulai Skrining' },
+    { to: '/history', icon: History, label: 'Riwayat Hasil' },
+    { to: '/education', icon: BookOpen, label: 'Edukasi' },
+    { to: '/profile', icon: UserIcon, label: 'Profil' },
+    { to: '/emodules', icon: Package2, label: 'E-Modul' },
   ];
 
   return (
     <div className="flex h-full max-h-screen flex-col gap-2">
       <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-        <NavLink to="/dashboard" className="flex items-center gap-2 font-semibold" onClick={handleLinkClick}>
-          <Package2 className="h-6 w-6 text-primary" />
+        <NavLink to="/dashboard" className="flex items-center gap-3 font-semibold" onClick={handleLinkClick}>
+          <img src="/assets/logo-CalMyCare.png" alt="CalmyCare Logo" className="h-8 w-8" />
           <span className="">CalMyCare</span>
         </NavLink>
       </div>
@@ -54,13 +47,9 @@ const PatientSidebarContent = ({ onLinkClick }: PatientSidebarContentProps) => {
             <NavLink
               key={item.to}
               to={item.to}
-              end={item.to === "/dashboard"}
+              end={item.to === '/dashboard'}
               onClick={handleLinkClick}
-              className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${
-                  isActive ? "bg-muted text-primary" : ""
-                }`
-              }
+              className={({ isActive }) => `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-primary/10 text-primary font-semibold' : 'font-medium'}`}
             >
               <item.icon className="h-4 w-4" />
               {item.label}

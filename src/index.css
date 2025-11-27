@@ -2,99 +2,101 @@
 @tailwind components;
 @tailwind utilities;
 
-/* CalMyCare Design System - Maternal Healthcare UI */
+/* CalMyCare Design System - Maternal Healthcare UI (Restyled) */
 
 @layer base {
   :root {
-    /* Core Colors - Soft, caring medical theme */
-    --background: 210 20% 98%;
-    --foreground: 222.2 84% 4.9%;
-    
+    /* Core Colors - Soft, warm, maternal theme */
+    --background: 340 100% 98%; /* Very light pink/cream */
+    --foreground: 16 25% 25%; /* Dark, warm brown */
+
     /* Maternal Care Brand Colors */
-    --primary: 200 98% 39%;        /* Calm medical blue */
-    --primary-foreground: 210 40% 98%;
-    --primary-glow: 200 100% 85%;  /* Soft blue glow */
-    
-    --maternal: 340 75% 55%;       /* Warm maternal pink */
-    --maternal-foreground: 0 0% 100%;
-    --maternal-light: 340 60% 85%; /* Light pink accent */
-    
-    --success: 142 76% 36%;        /* Healthcare success green */
-    --success-foreground: 355.7 100% 97.3%;
-    
-    --warning: 32 95% 44%;         /* Attention amber */
-    --warning-foreground: 210 40% 98%;
-    
+    --primary: 339 45% 70%; /* Main Rose Gold */
+    --primary-foreground: 16 25% 25%;
+    --primary-glow: 340 100% 90%; /* Soft pink glow */
+
+    /* DEPRECATED - Merged into primary */
+    --maternal: 339 45% 70%;
+    --maternal-foreground: 16 25% 25%;
+    --maternal-light: 340 80% 90%;
+
+    --success: 142 60% 40%; /* Softer success green */
+    --success-foreground: 0 0% 100%;
+
+    --warning: 32 80% 60%; /* Softer attention amber */
+    --warning-foreground: 16 25% 25%;
+
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    
+    --card-foreground: 16 25% 25%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    
-    --accent: 340 60% 95%;         /* Soft maternal accent */
-    --accent-foreground: 222.2 47.4% 11.2%;
-    
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 200 98% 39%;
-    
-    --radius: 0.75rem;
-    
-    /* Gradien indah untuk CalMyCare */
+    --popover-foreground: 16 25% 25%;
+
+    --secondary: 340 60% 92%; /* Light pink/peach */
+    --secondary-foreground: 16 25% 30%;
+
+    --muted: 340 40% 95%;
+    --muted-foreground: 17 15% 45%;
+
+    --accent: 340 70% 96%; /* Very soft pink accent */
+    --accent-foreground: 16 25% 25%;
+
+    --destructive: 0 70% 65%; /* Soft, warm red */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 340 20% 88%;
+    --input: 340 20% 88%;
+    --ring: 339 45% 70%;
+
+    --radius: 1rem; /* Increased for a rounder feel */
+
+    /* Gradients for the new theme */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-maternal: linear-gradient(135deg, hsl(var(--maternal)), hsl(var(--maternal-light)));
-    --gradient-hero: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--maternal)));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100% / 0.8), hsl(210 20% 98%));
-    
-    /* Elegant shadows */
-    --shadow-soft: 0 4px 20px -4px hsl(var(--primary) / 0.1);
-    --shadow-maternal: 0 8px 30px -8px hsl(var(--maternal) / 0.2);
-    --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.3);
-    
+    --gradient-maternal: linear-gradient(135deg, hsl(340, 100%, 97%), hsl(6, 100%, 94%));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--maternal-light)));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100% / 0.8), hsl(340 100% 98% / 0.9));
+
+    /* Softer shadows */
+    --shadow-soft: 0 6px 24px -6px hsl(var(--primary) / 0.2);
+    --shadow-maternal: 0 10px 35px -10px hsl(var(--maternal) / 0.25);
+    --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.4);
+
     /* Smooth transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    
-    --primary: 200 100% 70%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    
-    --maternal: 340 80% 65%;
-    --maternal-foreground: 222.2 47.4% 11.2%;
-    
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    
+    /* Dark theme can be refined later, focusing on light theme first */
+    --background: 20 14% 4%;
+    --foreground: 20 5% 90%;
+
+    --primary: 339 45% 70%;
+    --primary-foreground: 20 14% 4%;
+
+    --maternal: 339 45% 70%;
+    --maternal-foreground: 20 14% 4%;
+
+    --card: 20 14% 7%;
+    --card-foreground: 20 5% 90%;
+
+    --popover: 20 14% 4%;
+    --popover-foreground: 20 5% 90%;
+
+    --secondary: 20 14% 10%;
+    --secondary-foreground: 20 5% 90%;
+
+    --muted: 20 14% 10%;
+    --muted-foreground: 20 5% 60%;
+
+    --accent: 20 14% 10%;
+    --accent-foreground: 20 5% 90%;
+
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 200 100% 70%;
+    --destructive-foreground: 20 5% 90%;
+
+    --border: 20 14% 15%;
+    --input: 20 14% 15%;
+    --ring: 339 45% 70%;
   }
 }
 
@@ -102,54 +104,79 @@
   * {
     @apply border-border;
   }
-  
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    background-image: var(--gradient-maternal);
   }
-  
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold tracking-tight text-foreground;
   }
 }
 
 @layer components {
-  /* Hero Section Styles */
+  /* Gradients */
   .hero-gradient {
     background: var(--gradient-hero);
   }
-  
+
   .maternal-gradient {
     background: var(--gradient-maternal);
   }
-  
+
   .card-gradient {
     background: var(--gradient-card);
   }
-  
+
+  /* General Card Style Override */
+  .card {
+    @apply rounded-2xl shadow-soft; /* default to larger radius and soft shadow */
+  }
+
   /* Animated elements */
   .float-animation {
     animation: float 6s ease-in-out infinite;
   }
-  
+
   .pulse-glow {
     animation: pulse-glow 2s ease-in-out infinite alternate;
   }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes pulse-glow {
-  0% { box-shadow: var(--shadow-soft); }
-  100% { box-shadow: var(--shadow-glow); }
+  0% {
+    box-shadow: var(--shadow-soft);
+  }
+  100% {
+    box-shadow: var(--shadow-glow);
+  }
 }
 
 /* Custom animations for maternal care */
 @keyframes gentle-bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
 }
 
 @keyframes fade-in-up {
@@ -169,4 +196,28 @@
 
 .animate-fade-in-up {
   animation: fade-in-up 0.6s ease-out;
+}
+
+@layer utilities {
+  .shadow-soft-lg {
+    box-shadow: 0 12px 28px rgba(178, 75, 99, 0.08), 0 4px 10px rgba(178, 75, 99, 0.04);
+  }
+  .border-pink-50 {
+    border-color: #ffdce6;
+  }
+  .shadow-soft-lg {
+    box-shadow: 0 12px 28px rgba(178, 75, 99, 0.08), 0 4px 10px rgba(178, 75, 99, 0.04);
+  }
+  .border-pink-50 {
+    border-color: #ffdce6;
+  }
+}
+
+/* fullscreen polish */
+#flipbook-wrapper:fullscreen {
+  background: linear-gradient(180deg, rgba(255, 240, 244, 1) 0%, rgba(255, 217, 229, 1) 100%);
+}
+/* modal fullscreen polish (optional) */
+[data-dialog-content] {
+  /* if dialog library sets attribute - adjust accordingly */
 }

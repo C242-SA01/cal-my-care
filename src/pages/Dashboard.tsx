@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Badge, type BadgeProps } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,15 +53,25 @@ export default function Dashboard() {
     }
   };
 
-  const getAnxietyLevelColor = (level: string | null) => {
+  const getAnxietyLevelVariant = (level: string | null): BadgeProps['variant'] => {
     switch (level) {
-      case 'minimal': return 'bg-green-100 text-green-800';
-      case 'mild': return 'bg-yellow-100 text-yellow-800';
-      case 'moderate': return 'bg-orange-100 text-orange-800';
-      case 'severe': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'minimal': return 'success';
+      case 'mild': return 'warning';
+      case 'moderate': return 'destructive';
+      case 'severe': return 'destructive';
+      default: return 'secondary';
     }
   };
+
+  const getAnxietyLevelTextColor = (level: string | null): string => {
+    switch (level) {
+      case 'minimal': return 'text-success-foreground';
+      case 'mild': return 'text-warning-foreground';
+      case 'moderate': return 'text-destructive-foreground';
+      case 'severe': return 'text-destructive-foreground';
+      default: return 'text-secondary-foreground';
+    }
+  }
 
   const getAnxietyLevelText = (level: string | null) => {
     if (!level) return 'Belum Selesai';
@@ -87,7 +97,7 @@ export default function Dashboard() {
       {/* Welcome Section */}
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl font-bold">
-          Selamat Datang, {userProfile?.full_name || 'Pengguna'}!
+          Selamat Datang, {userProfile?.full_name || 'Bunda'}!
         </h1>
         <p className="text-muted-foreground mt-1">
           Pantau kesehatan mental Anda selama kehamilan dengan mudah dan aman.
@@ -96,11 +106,11 @@ export default function Dashboard() {
 
       {/* In-progress screening alert */}
       {inProgressScreening && (
-        <Card className="bg-blue-50 border-blue-200">
+        <Card className="bg-secondary border-primary/20">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-blue-800">Skrining Belum Selesai</CardTitle>
-              <CardDescription className="text-blue-700">Anda memiliki 1 sesi skrining yang belum diselesaikan.</CardDescription>
+              <CardTitle className="text-secondary-foreground">Skrining Belum Selesai</CardTitle>
+              <CardDescription className="text-muted-foreground">Anda memiliki 1 sesi skrining yang belum diselesaikan.</CardDescription>
             </div>
             <Button onClick={() => navigate('/screening')}>Lanjutkan Skrining</Button>
           </CardHeader>
@@ -109,7 +119,7 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="hover:shadow-md transition-shadow cursor-pointer flex flex-col" 
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer flex flex-col" 
               onClick={() => navigate('/screening')}>
           <CardHeader><CardTitle>Skrining Baru</CardTitle></CardHeader>
           <CardContent className="flex-grow flex items-end justify-between">
@@ -118,7 +128,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow cursor-pointer flex flex-col" 
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer flex flex-col" 
               onClick={() => navigate('/education')}>
           <CardHeader><CardTitle>Materi Edukasi</CardTitle></CardHeader>
           <CardContent className="flex-grow flex items-end justify-between">
@@ -127,7 +137,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow cursor-pointer flex flex-col" 
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer flex flex-col" 
               onClick={() => navigate('/history')}>
           <CardHeader><CardTitle>Total Skrining</CardTitle></CardHeader>
           <CardContent className="flex-grow flex items-end justify-between">
@@ -136,10 +146,10 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-muted/40 flex flex-col">
+        <Card className="bg-secondary flex flex-col">
           <CardHeader><CardTitle>Hasil Terakhir</CardTitle></CardHeader>
           <CardContent className="flex-grow flex items-end justify-between">
-            <Badge className={`${getAnxietyLevelColor(latestScreening?.anxiety_level)} text-base`}>
+            <Badge variant={getAnxietyLevelVariant(latestScreening?.anxiety_level)} className="text-base">
               {getAnxietyLevelText(latestScreening?.anxiety_level)}
             </Badge>
             <TrendingUp className="h-10 w-10 text-primary/70" />
@@ -168,7 +178,7 @@ export default function Dashboard() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm font-medium">
                     <span>Skor: {latestScreening.total_score}/21</span>
-                    <span className={`font-semibold ${getAnxietyLevelColor(latestScreening.anxiety_level).split(' ')[1]}`}>
+                    <span className={`font-semibold ${getAnxietyLevelTextColor(latestScreening.anxiety_level)}`}>
                       {getAnxietyLevelText(latestScreening.anxiety_level)}
                     </span>
                   </div>
@@ -182,7 +192,7 @@ export default function Dashboard() {
 
       {/* Initial Call to Action */}
       {screenings.length === 0 && (
-        <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+        <Card className="bg-gradient-to-r from-primary/10 to-secondary/50 border-primary/20">
           <CardContent className="p-8 text-center">
             <h3 className="text-xl font-semibold mb-2">Mulai Perjalanan Kesehatan Mental Anda</h3>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">

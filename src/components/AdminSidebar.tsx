@@ -1,7 +1,7 @@
-import { NavLink, useNavigate } from "react-router-dom";
-import { Home, LineChart, LogOut, Package2, Users, BookOpen, User as UserIcon } from "lucide-react";
-import { Button } from "./ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { NavLink, useNavigate } from 'react-router-dom';
+import { Home, LineChart, LogOut, Package2, Users, BookOpen, User as UserIcon } from 'lucide-react';
+import { Button } from './ui/button';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SidebarContentProps {
   onLinkClick?: () => void;
@@ -12,7 +12,7 @@ const SidebarContent = ({ onLinkClick }: SidebarContentProps) => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate("/auth", { replace: true });
+    navigate('/auth', { replace: true });
     if (onLinkClick) onLinkClick();
   };
 
@@ -32,23 +32,14 @@ const SidebarContent = ({ onLinkClick }: SidebarContentProps) => {
       </div>
       <div className="flex-1">
         <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-          <NavLink
-            to="/admin"
-            end
-            onClick={handleLinkClick}
-            className={({ isActive }) =>
-              `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`
-            }
-          >
+          <NavLink to="/admin" end onClick={handleLinkClick} className={({ isActive }) => `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`}>
             <Home className="h-4 w-4" />
             Dashboard
           </NavLink>
           <NavLink
             to="/admin/patients"
             onClick={handleLinkClick}
-            className={({ isActive }) =>
-              `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`
-            }
+            className={({ isActive }) => `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`}
           >
             <Users className="h-4 w-4" />
             Pasien
@@ -56,39 +47,35 @@ const SidebarContent = ({ onLinkClick }: SidebarContentProps) => {
           <NavLink
             to="/admin/education"
             onClick={handleLinkClick}
-            className={({ isActive }) =>
-              `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`
-            }
+            className={({ isActive }) => `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`}
           >
             <BookOpen className="h-4 w-4" />
             Edukasi
           </NavLink>
           <NavLink
+            to="/admin/emodules"
+            onClick={handleLinkClick}
+            className={({ isActive }) => `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`}
+          >
+            <Package2 className="h-4 w-4" />
+            E-Module
+          </NavLink>
+          <NavLink
             to="/admin/results"
             onClick={handleLinkClick}
-            className={({ isActive }) =>
-              `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`
-            }
+            className={({ isActive }) => `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`}
           >
             <LineChart className="h-4 w-4" />
             Hasil Skrining
           </NavLink>
-          <NavLink
-            to="/admin/users"
-            onClick={handleLinkClick}
-            className={({ isActive }) =>
-              `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`
-            }
-          >
+          <NavLink to="/admin/users" onClick={handleLinkClick} className={({ isActive }) => `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`}>
             <Users className="h-4 w-4" />
             Manajemen Pengguna
           </NavLink>
           <NavLink
             to="/admin/profile"
             onClick={handleLinkClick}
-            className={({ isActive }) =>
-              `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`
-            }
+            className={({ isActive }) => `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`}
           >
             <UserIcon className="h-4 w-4" />
             Profil

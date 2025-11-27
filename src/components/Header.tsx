@@ -60,8 +60,8 @@ const Header = () => {
           className="flex items-center space-x-3 cursor-pointer"
           onClick={() => navigate("/")}
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-maternal">
-            <Heart className="h-6 w-6 text-white" />
+          <div className="flex h-12 w-12 items-center justify-center">
+            <img src="/assets/logo-CalMyCare.png" alt="CalmyCare Logo" className="h-full w-full object-contain" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-foreground">CalMyCare</h1>

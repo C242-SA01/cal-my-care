@@ -153,55 +153,74 @@ export type Database = {
         }
         Relationships: []
       }
-      educational_materials: {
+      bookmarked_educations: {
         Row: {
-          anxiety_level: Database["public"]["Enums"]["anxiety_level"] | null
-          content: string
-          created_at: string | null
-          created_by: string | null
-          id: string
-          image_url: string | null
-          is_published: boolean | null
-          material_type: string | null
-          title: string
-          updated_at: string | null
-          video_url: string | null
+          created_at: string
+          education_id: number
+          user_id: string
         }
         Insert: {
-          anxiety_level?: Database["public"]["Enums"]["anxiety_level"] | null
-          content: string
-          created_at?: string | null
-          created_by?: string | null
-          id?: string
-          image_url?: string | null
-          is_published?: boolean | null
-          material_type?: string | null
-          title: string
-          updated_at?: string | null
-          video_url?: string | null
+          created_at?: string
+          education_id: number
+          user_id: string
         }
         Update: {
-          anxiety_level?: Database["public"]["Enums"]["anxiety_level"] | null
-          content?: string
-          created_at?: string | null
-          created_by?: string | null
-          id?: string
-          image_url?: string | null
-          is_published?: boolean | null
-          material_type?: string | null
-          title?: string
-          updated_at?: string | null
-          video_url?: string | null
+          created_at?: string
+          education_id?: number
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "educational_materials_created_by_fkey"
-            columns: ["created_by"]
+            foreignKeyName: "bookmarked_educations_education_id_fkey"
+            columns: ["education_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "educations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookmarked_educations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
+      }
+      educations: {
+        Row: {
+          id: number
+          title: string
+          description: string | null
+          cover_image_url: string | null
+          pdf_url: string | null
+          embed_url: string | null
+          is_published: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: never
+          title: string
+          description?: string | null
+          cover_image_url?: string | null
+          pdf_url?: string | null
+          embed_url?: string | null
+          is_published?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: never
+          title?: string
+          description?: string | null
+          cover_image_url?: string | null
+          pdf_url?: string | null
+          embed_url?: string | null
+          is_published?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       gad7_questions: {
         Row: {

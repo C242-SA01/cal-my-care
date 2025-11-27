@@ -81,7 +81,7 @@ const PatientDetail = ({ patient }: PatientDetailProps) => {
           gad7_questions!inner(question_text)
         `)
         .eq("screening_id", screeningId)
-        .order("question_id");
+        .order("question_id", { ascending: true });
 
       if (error) throw error;
 
