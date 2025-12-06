@@ -38,6 +38,8 @@ import {
   ChevronsUpDown,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import SplashScreen from "@/components/SplashScreen";
+import { markFirstLoginAsCompleted } from "@/lib/user";
 
 // Validation Schemas
 const signInSchema = z.object({
@@ -81,6 +83,7 @@ export default function Auth() {
   const [tab, setTab] = useState<"signin" | "signup">("signin");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
   const { signIn, signUp, user, userProfile, isProfileLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -105,13 +108,32 @@ export default function Auth() {
     },
   });
 
+  const handleSplashFinished = () => {
+    if (!userProfile) return;
+
+    const { role, is_first_login } = userProfile;
+
+    if (role === "admin" || role === "midwife") {
+      navigate("/admin", { replace: true });
+    } else if (role === "patient") {
+      if (is_first_login) {
+        // Mark first login as completed and redirect to screening
+        markFirstLoginAsCompleted();
+        navigate("/screening", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
+    } else {
+      // Fallback for any other roles or weird states
+      navigate("/", { replace: true });
+    }
+  };
+
   useEffect(() => {
+    // When user session and profile are loaded, decide what to do
     if (user && !isProfileLoading && userProfile) {
-      const targetPath =
-        userProfile.role === "admin" || userProfile.role === "midwife"
-          ? "/admin"
-          : "/dashboard";
-      navigate(targetPath);
+      // Instead of navigating directly, show the splash screen
+      setShowSplash(true);
     }
   }, [user, isProfileLoading, userProfile, navigate]);
 
@@ -132,6 +154,7 @@ export default function Auth() {
     try {
       const { error } = await signIn(values.email, values.password);
       if (error) throw error;
+      // On successful sign-in, the useEffect will trigger the splash screen
     } catch (error: any) {
       toast({
         title: "Gagal Masuk",
@@ -205,7 +228,13 @@ export default function Auth() {
     }
   };
 
-  if (isProfileLoading) {
+  // If a user is logged in, show the splash screen
+  if (showSplash) {
+    return <SplashScreen onFinished={handleSplashFinished} />;
+  }
+
+  // While waiting for auth state, show a loader
+  if (isProfileLoading && !user) {
     return (
       <div className="min-h-dvh flex items-center justify-center bg-gradient-to-b from-[#FAD2E1] to-[#FBE5EC] dark:from-[#0B0B10] dark:to-[#0B0B10]">
         <Loader2 className="h-8 w-8 animate-spin text-rose-500" />
@@ -403,7 +432,7 @@ export default function Auth() {
                 <FormItem>
                   <FormControl>
                     <div className="relative">
-                      <FieldIcon icon={<Mail size={18} />} />
+                        <FieldIcon icon={<Mail size={18} />} />
                       <Input
                         placeholder="Email"
                         className="h-12 rounded-xl pl-10 shadow-sm"

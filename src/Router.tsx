@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Screening from './pages/Screening';
 import Results from './pages/Results';
 import AuthConfirm from './pages/AuthConfirm';
+import UpdatePassword from './pages/UpdatePassword'; // Import the new page
 import { useAuth } from './hooks/useAuth';
 import NotFound from './pages/NotFound';
 
@@ -89,6 +90,7 @@ const Router = () => {
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/auth/confirm" element={<AuthConfirm />} />
+          <Route path="/update-password" element={<UpdatePassword />} />
         </Route>
 
         {/* Authenticated Routes */}

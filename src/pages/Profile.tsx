@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, User as UserIcon, Edit } from 'lucide-react';
+import { Loader2, User as UserIcon, Edit, KeyRound } from 'lucide-react';
 
 const inputClasses = 'rounded-2xl border-pink-100 bg-white/80 focus-visible:ring-2 focus-visible:ring-pink-300 focus-visible:ring-offset-0';
 const selectTriggerClasses = 'rounded-2xl border-pink-100 bg-white/80 focus-visible:ring-2 focus-visible:ring-pink-300 focus-visible:ring-offset-0';
@@ -29,6 +29,15 @@ const Profile = () => {
   const [trimester, setTrimester] = useState('');
   const [education, setEducation] = useState('');
   const [occupation, setOccupation] = useState('');
+
+  // Password change state
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Account recovery state
+  const [isRecoveryLoading, setIsRecoveryLoading] = useState(false);
 
   const isHealthStaff = userProfile?.role === 'admin' || userProfile?.role === 'midwife';
 
@@ -92,6 +101,58 @@ const Profile = () => {
       setIsSubmitting(false);
     }
   };
+
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast({ title: 'Error', description: 'Password baru tidak cocok.', variant: 'destructive' });
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast({ title: 'Error', description: 'Password minimal harus 6 karakter.', variant: 'destructive' });
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+
+      toast({ title: 'Berhasil', description: 'Password Anda telah diperbarui.' });
+      setIsPasswordDialogOpen(false);
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
+  const handlePasswordRecovery = async () => {
+    if (!user?.email) return;
+
+    setIsRecoveryLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: `${window.location.origin}/update-password`,
+      });
+      if (error) throw error;
+      toast({
+        title: 'Terkirim',
+        description: `Link pemulihan password telah dikirim ke ${user.email}. Silakan cek email Anda.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRecoveryLoading(false);
+    }
+  };
+
 
   if (isProfileLoading) {
     return (
@@ -167,11 +228,40 @@ const Profile = () => {
                         <Input id="age" type="number" className={inputClasses} value={age} onChange={(e) => setAge(e.target.value)} />
                       </div>
                     </div>
-                    {/* Opsional: tombol ubah password (placeholder, tanpa logic) */}
+                    {/* Change Password Dialog Trigger */}
                     <div className="flex justify-end">
-                      <Button type="button" variant="outline" className="rounded-2xl border-pink-200 bg-white text-pink-700 hover:bg-pink-50 hover:text-pink-800">
-                        Ubah Password
-                      </Button>
+                      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+                        <DialogTrigger asChild>
+                           <Button type="button" variant="outline" className="rounded-2xl border-pink-200 bg-white text-pink-700 hover:bg-pink-50 hover:text-pink-800">
+                            Ubah Password
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md rounded-3xl bg-white p-6 sm:p-8">
+                          <DialogHeader>
+                            <DialogTitle>Ubah Password</DialogTitle>
+                            <CardDescription>Masukkan password baru Anda.</CardDescription>
+                          </DialogHeader>
+                          <form onSubmit={handlePasswordUpdate} className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="newPassword">Password Baru</Label>
+                              <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={inputClasses} />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="confirmPassword">Konfirmasi Password Baru</Label>
+                              <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputClasses} />
+                            </div>
+                            <DialogFooter>
+                               <DialogClose asChild>
+                                <Button type="button" variant="ghost" className="rounded-2xl">Batal</Button>
+                              </DialogClose>
+                              <Button type="submit" disabled={isUpdatingPassword} className="rounded-2xl bg-pink-500 text-white hover:bg-pink-600">
+                                {isUpdatingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Simpan Password Baru
+                              </Button>
+                            </DialogFooter>
+                          </form>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   </div>
 
@@ -326,6 +416,27 @@ const Profile = () => {
             </section>
           </CardContent>
         </Card>
+        
+        {/* Security Settings Card */}
+        <Card className="rounded-3xl border-0 bg-white/80 shadow-lg backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-slate-800">Keamanan & Pemulihan Akun</CardTitle>
+            <CardDescription className="text-sm text-slate-500">Kelola keamanan akun Anda.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between p-4 rounded-2xl border border-pink-100 bg-white">
+                <div>
+                    <h3 className="font-semibold text-slate-800">Pemulihan Akun</h3>
+                    <p className="text-sm text-slate-500">Lupa password? Kami akan mengirimkan link untuk mengatur ulang password Anda.</p>
+                </div>
+                <Button onClick={handlePasswordRecovery} disabled={isRecoveryLoading} variant="outline" className="rounded-2xl border-pink-200 bg-white text-pink-700 hover:bg-pink-50 hover:text-pink-800">
+                    {isRecoveryLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
+                    Kirim Link Pemulihan
+                </Button>
+            </div>
+          </CardContent>
+        </Card>
+
       </div>
     </div>
   );

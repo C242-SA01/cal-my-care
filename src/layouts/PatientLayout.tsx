@@ -3,8 +3,10 @@ import PatientSidebarContent from "@/components/PatientSidebar";
 import BottomNavbar from "@/components/BottomNavbar";
 import { PatientHeader } from "@/components/PatientHeader";
 import { useMobile } from "@/hooks/use-mobile";
+import { useFirstTimeGate } from "@/hooks/useFirstTimeGate";
 
 const PatientLayout = () => {
+  useFirstTimeGate(); // Enforce first-time screening
   const isMobile = useMobile();
 
   return (

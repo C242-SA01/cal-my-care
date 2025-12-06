@@ -16,6 +16,40 @@ interface Question {
   question_order: number;
 }
 
+const screeningQuestions: Question[] = [
+  { id: 'q1', question_text: 'Khawatir terhadap janin atau kehamilan', question_order: 1 },
+  { id: 'q2', question_text: 'Takut jika bahaya akan datang pada janin', question_order: 2 },
+  { id: 'q3', question_text: 'Merasa takut akan hal-hal buruk yang akan terjadi', question_order: 3 },
+  { id: 'q4', question_text: 'Khawatir tentang banyak hal', question_order: 4 },
+  { id: 'q5', question_text: 'Khawatir tentang masa depan', question_order: 5 },
+  { id: 'q6', question_text: 'Merasa kelelahan', question_order: 6 },
+  { id: 'q7', question_text: 'Merasa takut terhadap jarum, darah, kelahiran, nyeri, dan sakit', question_order: 7 },
+  { id: 'q8', question_text: 'Mendadak merasa takut atau tidak nyaman berlebihan', question_order: 8 },
+  { id: 'q9', question_text: 'Memikirkan suatu hal berulang-ulang dan sulit dihentikan atau dikontrol', question_order: 9 },
+  { id: 'q10', question_text: 'Sulit tidur walau ada kesempatan tidur sempurna', question_order: 10 },
+  { id: 'q11', question_text: 'Merasa harus melakukan hal-hal sesuai aturan', question_order: 11 },
+  { id: 'q12', question_text: 'Menginginkan segala sesuatu sempurna', question_order: 12 },
+  { id: 'q13', question_text: 'Merasa perlu mengendalikan segala hal', question_order: 13 },
+  { id: 'q14', question_text: 'Sulit berhenti memeriksa atau melakukan sesuatu secara berlebihan', question_order: 14 },
+  { id: 'q15', question_text: 'Merasa gelisah atau mudah terkejut', question_order: 15 },
+  { id: 'q16', question_text: 'Merasa khawatir atas pikiran berulang', question_order: 16 },
+  { id: 'q17', question_text: 'Merasa perlu selalu mengawasi sesuatu', question_order: 17 },
+  { id: 'q18', question_text: 'Terganggu kenangan berulang atau mimpi buruk', question_order: 18 },
+  { id: 'q19', question_text: 'Khawatir mempermalukan diri di depan orang lain', question_order: 19 },
+  { id: 'q20', question_text: 'Khawatir orang lain menilai negatif', question_order: 20 },
+  { id: 'q21', question_text: 'Tidak nyaman di keramaian', question_order: 21 },
+  { id: 'q22', question_text: 'Menghindari kegiatan sosial', question_order: 22 },
+  { id: 'q23', question_text: 'Menghindari hal yang membuat risau', question_order: 23 },
+  { id: 'q24', question_text: 'Merasa terpisah dari diri sendiri', question_order: 24 },
+  { id: 'q25', question_text: 'Lupa waktu dan apa yang telah terjadi', question_order: 25 },
+  { id: 'q26', question_text: 'Sulit menyesuaikan diri dengan perubahan', question_order: 26 },
+  { id: 'q27', question_text: 'Khawatir tidak mampu melakukan sesuatu', question_order: 27 },
+  { id: 'q28', question_text: 'Pikiran tidak berhenti dan sulit berkonsentrasi', question_order: 28 },
+  { id: 'q29', question_text: 'Takut kehilangan kendali', question_order: 29 },
+  { id: 'q30', question_text: 'Merasa panik', question_order: 30 },
+  { id: 'q31', question_text: 'Merasa gelisah', question_order: 31 },
+];
+
 interface Answer {
   question_id: string;
   score: number;
@@ -46,30 +80,12 @@ export default function Screening() {
     }
     
     if (user) {
-      fetchQuestions();
+      // Set questions from the static list
+      setQuestions(screeningQuestions);
+      setIsLoading(false);
       initializeScreening();
     }
   }, [user, loading, navigate]);
-
-  const fetchQuestions = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('gad7_questions')
-        .select('*')
-        .order('question_order', { ascending: true });
-
-      if (error) throw error;
-      setQuestions(data || []);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Gagal memuat pertanyaan skrining",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const initializeScreening = async () => {
     try {
@@ -232,7 +248,7 @@ export default function Screening() {
               <img src="/assets/logo-CalMyCare.png" alt="CalmyCare Logo" className="h-8 w-8 mr-3" />
               <div>
                 <h1 className="text-xl font-bold text-foreground">CalMyCare</h1>
-                <p className="text-sm text-muted-foreground">Skrining GAD-7</p>
+                <p className="text-sm text-muted-foreground">Skrining Kecemasan</p>
               </div>
             </div>
             <Button variant="outline" onClick={() => navigate('/dashboard')}>

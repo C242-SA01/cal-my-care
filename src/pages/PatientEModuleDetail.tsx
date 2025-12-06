@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, AlertTriangle, FileText } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle, FileText, Download } from "lucide-react";
 import FlipbookViewer from "@/components/admin/FlipbookViewer"; // Reusing the FlipbookViewer
 
 type EModule = {
@@ -111,25 +111,24 @@ const PatientEModuleDetail = () => {
             </div>
           )}
 
-          <div className="mt-6">
-            {module.flipbook_url ? (
-                <div className="aspect-w-16 aspect-h-9 md:aspect-[4/3] rounded-lg overflow-hidden border border-rose-200 shadow-md">
-                    <iframe
-                        src={module.flipbook_url}
-                        title={module.title}
-                        width="100%"
-                        height="100%"
-                        className="rounded-lg"
-                        frameBorder="0"
-                        allowFullScreen
-                    >
-                        <p>Browser Anda tidak mendukung iFrame. <a href={module.flipbook_url} target="_blank" rel="noopener noreferrer">Lihat Flipbook</a>.</p>
-                    </iframe>
-                </div>
-            ) : module.file_url ? (
-                <div className="h-[70vh] border border-rose-200 rounded-lg shadow-md flex justify-center items-center">
-                    <FlipbookViewer pdfUrl={module.file_url} />
-                </div>
+          {module.file_url && (
+            <div className="my-8 text-center">
+              <Button asChild size="lg" className="bg-rose-600 hover:bg-rose-700 dark:bg-rose-700 dark:hover:bg-rose-800">
+                <a href={module.file_url} download={`${module.title || 'e-modul'}.pdf`} target="_blank" rel="noopener noreferrer">
+                  <Download className="mr-2 h-5 w-5" />
+                  Download Materi
+                </a>
+              </Button>
+            </div>
+          )}
+
+          <div className="mt-8">
+            {module.file_url ? (
+              <FlipbookViewer 
+                pdfUrl={module.file_url} 
+                title={module.title} 
+                cover={module.cover_image_url}
+              />
             ) : (
                 <div className="text-center py-12 border border-rose-200 rounded-lg bg-rose-50">
                     <h3 className="text-lg font-semibold text-rose-700">Tidak ada file modul yang tersedia</h3>

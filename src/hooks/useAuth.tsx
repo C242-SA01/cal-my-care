@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface UserProfile {
   id: string;
   role: string;
+  is_first_login: boolean;
   [key: string]: any;
 }
 
