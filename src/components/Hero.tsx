@@ -27,12 +27,10 @@ const Hero = () => {
               <h1 className="text-4xl md:text-6xl font-bold leading-tight">
                 <span className="bg-gradient-to-r from-primary to-maternal bg-clip-text text-transparent">CalMyCare</span>
                 <br />
-                <span className="text-foreground">Merawat Anda &amp; Bayi</span>
+                <span className="text-foreground">Untuk Ibu Primigravida</span>
               </h1>
 
-              <p className="text-xl text-muted-foreground max-w-lg leading-relaxed">
-                Skrining kecemasan profesional dan dukungan edukasi untuk ibu baru. Ikuti penilaian GAD-7 dan akses sumber daya kesehatan ibu hamil yang dipersonalisasi.
-              </p>
+              <p className="text-xl text-muted-foreground max-w-lg leading-relaxed">Skrining Kecemasan Profesional dan dukungan edukasi untuk Ibu Primigravida.</p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -72,8 +70,8 @@ const Hero = () => {
                   <Shield className="h-6 w-6 text-primary" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="font-semibold text-foreground">Skrining GAD-7 Profesional</h3>
-                  <p className="text-sm text-muted-foreground">Alat penilaian kecemasan yang divalidasi secara klinis dan dirancang khusus untuk kesehatan ibu.</p>
+                  <h3 className="font-semibold text-foreground">Skrining PASS</h3>
+                  <p className="text-sm text-muted-foreground">Alat penilaian kecemasan yang divalidasi secara klinis dan dirancang khusus untuk kecemasan ibu hamil.</p>
                 </div>
               </div>
             </Card>
@@ -84,13 +82,13 @@ const Hero = () => {
                   <Heart className="h-6 w-6 text-maternal" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="font-semibold text-foreground">Rencana Perawatan Pribadi</h3>
+                  <h3 className="font-semibold text-foreground">Kesehatan mental ibu primigravida</h3>
                   <p className="text-sm text-muted-foreground">Dapatkan rekomendasi dan materi edukasi yang disesuaikan berdasarkan hasil skrining Anda.</p>
                 </div>
               </div>
             </Card>
 
-            <Card className="p-6 card-gradient shadow-soft hover:shadow-maternal transition-all duration-300">
+            {/* <Card className="p-6 card-gradient shadow-soft hover:shadow-maternal transition-all duration-300">
               <div className="flex items-start space-x-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-success/10">
                   <Users className="h-6 w-6 text-success" />
@@ -100,7 +98,7 @@ const Hero = () => {
                   <p className="text-sm text-muted-foreground">Platform aman bagi penyedia layanan kesehatan untuk memantau dan mendukung pasien mereka.</p>
                 </div>
               </div>
-            </Card>
+            </Card> */}
           </div>
         </div>
       </div>

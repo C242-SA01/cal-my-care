@@ -92,7 +92,7 @@ const EducationManagement = () => {
   const [editingMaterial, setEditingMaterial] =
     useState<EducationalMaterial | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(() => {
-    const storedValue = localStorage.getItem(DIALOG_OPEN_STORAGE_KEY);
+    const storedValue = sessionStorage.getItem(DIALOG_OPEN_STORAGE_KEY);
     return storedValue ? JSON.parse(storedValue) : false;
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -100,7 +100,7 @@ const EducationManagement = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    localStorage.setItem(DIALOG_OPEN_STORAGE_KEY, JSON.stringify(isDialogOpen));
+    sessionStorage.setItem(DIALOG_OPEN_STORAGE_KEY, JSON.stringify(isDialogOpen));
   }, [isDialogOpen]);
 
   useEffect(() => {
@@ -239,7 +239,7 @@ const EducationManagement = () => {
         });
       }
 
-      localStorage.removeItem(draftKey);
+      sessionStorage.removeItem(draftKey);
       setIsDialogOpen(false);
       setEditingMaterial(null);
       fetchMaterials();
@@ -308,7 +308,7 @@ const EducationManagement = () => {
                   const draftKey = editingMaterial?.id
                     ? `education-form-draft-${editingMaterial.id}`
                     : "education-form-draft-new";
-                  localStorage.removeItem(draftKey);
+                  sessionStorage.removeItem(draftKey);
                   setEditingMaterial(null);
                 }
                 setIsDialogOpen(isOpen);

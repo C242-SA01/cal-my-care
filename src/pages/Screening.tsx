@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -8,63 +8,36 @@ import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, ArrowRight, Heart, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
 
+// Updated Interfaces
 interface Question {
   id: string;
   question_text: string;
   question_order: number;
+  type: 'gad7' | 'pass'; // Add type to identify the source table
 }
-
-const screeningQuestions: Question[] = [
-  { id: 'q1', question_text: 'Khawatir terhadap janin atau kehamilan', question_order: 1 },
-  { id: 'q2', question_text: 'Takut jika bahaya akan datang pada janin', question_order: 2 },
-  { id: 'q3', question_text: 'Merasa takut akan hal-hal buruk yang akan terjadi', question_order: 3 },
-  { id: 'q4', question_text: 'Khawatir tentang banyak hal', question_order: 4 },
-  { id: 'q5', question_text: 'Khawatir tentang masa depan', question_order: 5 },
-  { id: 'q6', question_text: 'Merasa kelelahan', question_order: 6 },
-  { id: 'q7', question_text: 'Merasa takut terhadap jarum, darah, kelahiran, nyeri, dan sakit', question_order: 7 },
-  { id: 'q8', question_text: 'Mendadak merasa takut atau tidak nyaman berlebihan', question_order: 8 },
-  { id: 'q9', question_text: 'Memikirkan suatu hal berulang-ulang dan sulit dihentikan atau dikontrol', question_order: 9 },
-  { id: 'q10', question_text: 'Sulit tidur walau ada kesempatan tidur sempurna', question_order: 10 },
-  { id: 'q11', question_text: 'Merasa harus melakukan hal-hal sesuai aturan', question_order: 11 },
-  { id: 'q12', question_text: 'Menginginkan segala sesuatu sempurna', question_order: 12 },
-  { id: 'q13', question_text: 'Merasa perlu mengendalikan segala hal', question_order: 13 },
-  { id: 'q14', question_text: 'Sulit berhenti memeriksa atau melakukan sesuatu secara berlebihan', question_order: 14 },
-  { id: 'q15', question_text: 'Merasa gelisah atau mudah terkejut', question_order: 15 },
-  { id: 'q16', question_text: 'Merasa khawatir atas pikiran berulang', question_order: 16 },
-  { id: 'q17', question_text: 'Merasa perlu selalu mengawasi sesuatu', question_order: 17 },
-  { id: 'q18', question_text: 'Terganggu kenangan berulang atau mimpi buruk', question_order: 18 },
-  { id: 'q19', question_text: 'Khawatir mempermalukan diri di depan orang lain', question_order: 19 },
-  { id: 'q20', question_text: 'Khawatir orang lain menilai negatif', question_order: 20 },
-  { id: 'q21', question_text: 'Tidak nyaman di keramaian', question_order: 21 },
-  { id: 'q22', question_text: 'Menghindari kegiatan sosial', question_order: 22 },
-  { id: 'q23', question_text: 'Menghindari hal yang membuat risau', question_order: 23 },
-  { id: 'q24', question_text: 'Merasa terpisah dari diri sendiri', question_order: 24 },
-  { id: 'q25', question_text: 'Lupa waktu dan apa yang telah terjadi', question_order: 25 },
-  { id: 'q26', question_text: 'Sulit menyesuaikan diri dengan perubahan', question_order: 26 },
-  { id: 'q27', question_text: 'Khawatir tidak mampu melakukan sesuatu', question_order: 27 },
-  { id: 'q28', question_text: 'Pikiran tidak berhenti dan sulit berkonsentrasi', question_order: 28 },
-  { id: 'q29', question_text: 'Takut kehilangan kendali', question_order: 29 },
-  { id: 'q30', question_text: 'Merasa panik', question_order: 30 },
-  { id: 'q31', question_text: 'Merasa gelisah', question_order: 31 },
-];
 
 interface Answer {
   question_id: string;
   score: number;
+  question_type: 'gad7' | 'pass'; // Add question_type to match the DB schema
 }
 
 export default function Screening() {
   const { user, loading } = useAuth();
+  const { trimester } = useParams<{ trimester: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [screeningId, setScreeningId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
+
+  const parsedTrimester = trimester ? parseInt(trimester, 10) : null;
 
   const scoreOptions = [
     { value: '0', label: 'Tidak sama sekali', description: '0 hari' },
@@ -74,102 +47,160 @@ export default function Screening() {
   ];
 
   useEffect(() => {
+    const initializePage = async (trimesterNumber: number) => {
+      if (!user) return;
+      
+      setIsLoading(true);
+      try {
+        // 1. Fetch questions from both GAD-7 and PASS tables
+        const { data: gad7Data, error: gad7Error } = await supabase
+          .from('gad7_questions')
+          .select('*')
+          .order('question_order', { ascending: true });
+        if (gad7Error) throw new Error(`Gagal memuat pertanyaan GAD-7: ${gad7Error.message}`);
+
+        const { data: passData, error: passError } = await supabase
+          .from('pass_questions')
+          .select('*')
+          .order('question_order', { ascending: true });
+        if (passError) throw new Error(`Gagal memuat pertanyaan PASS: ${passError.message}`);
+
+        // Map and combine questions, adding the 'type'
+        const gad7Questions = (gad7Data || []).map(q => ({ ...q, type: 'gad7' as const }));
+        const passQuestions = (passData || []).map(q => ({ ...q, type: 'pass' as const }));
+        const allQuestions = [...gad7Questions, ...passQuestions];
+
+        if (allQuestions.length === 0) {
+            throw new Error("Tidak ada pertanyaan yang ditemukan.");
+        }
+        
+        setQuestions(allQuestions);
+
+        // 2. Initialize screening session
+        const { data: existingScreenings, error: existingError } = await supabase
+          .from('screenings')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('status', 'in_progress')
+          .eq('trimester', trimesterNumber)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (existingError) throw existingError;
+
+        let currentScreeningId: string;
+        const existingScreening = existingScreenings?.[0];
+
+        if (existingScreening) {
+          currentScreeningId = existingScreening.id;
+          setScreeningId(currentScreeningId);
+        } else {
+          const { data: newScreening, error } = await supabase
+            .from('screenings')
+            .insert({ user_id: user.id, status: 'in_progress', trimester: trimesterNumber })
+            .select('id')
+            .single();
+
+          if (error) throw error;
+          currentScreeningId = newScreening.id;
+          setScreeningId(currentScreeningId);
+          setAnswers([]);
+          setCurrentQuestionIndex(0); // Reset index for new screening
+          sessionStorage.removeItem(`screening-answers-${currentScreeningId}`);
+          sessionStorage.removeItem(`screening-index-${currentScreeningId}`);
+        }
+        
+        // 3. Load Answers and Index from session or DB
+        const answersKey = `screening-answers-${currentScreeningId}`;
+        const indexKey = `screening-index-${currentScreeningId}`;
+
+        const savedAnswersJson = sessionStorage.getItem(answersKey);
+        if (savedAnswersJson) {
+          // Filter out answers that don't have a valid question_id from the newly fetched questions.
+          const validQuestionIds = new Set(allQuestions.map(q => q.id));
+          const parsedAnswers = JSON.parse(savedAnswersJson);
+          const filteredAnswers = parsedAnswers.filter((a: Answer) => validQuestionIds.has(a.question_id));
+          
+          setAnswers(filteredAnswers);
+          sessionStorage.setItem(answersKey, JSON.stringify(filteredAnswers));
+
+        } else {
+          // Fallback to DB if session is empty
+          const { data: existingAnswers } = await supabase
+            .from('screening_answers')
+            .select('question_id, score, question_type') // Ensure question_type is selected
+            .eq('screening_id', currentScreeningId);
+
+          if (existingAnswers && existingAnswers.length > 0) {
+            setAnswers(existingAnswers as Answer[]);
+            sessionStorage.setItem(answersKey, JSON.stringify(existingAnswers));
+          }
+        }
+        
+        const savedIndex = sessionStorage.getItem(indexKey);
+        if (savedIndex) {
+          setCurrentQuestionIndex(parseInt(savedIndex, 10));
+        }
+
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: "Gagal memuat data kuis: " + error.message,
+          variant: "destructive",
+        });
+        navigate('/quiz');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (!parsedTrimester || ![1, 2, 3].includes(parsedTrimester)) {
+      toast({ title: "Error", description: "Trimester quiz tidak valid.", variant: "destructive" });
+      navigate('/quiz');
+      return;
+    }
+
     if (!loading && !user) {
       navigate('/auth');
       return;
     }
     
     if (user) {
-      // Set questions from the static list
-      setQuestions(screeningQuestions);
-      setIsLoading(false);
-      initializeScreening();
+      initializePage(parsedTrimester);
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, parsedTrimester, toast]);
 
-  const initializeScreening = async () => {
-    try {
-      // Check if there's an ongoing screening
-      const { data: existingScreening } = await supabase
-        .from('screenings')
-        .select('*')
-        .eq('user_id', user?.id)
-        .eq('status', 'in_progress')
-        .single();
-
-      if (existingScreening) {
-        setScreeningId(existingScreening.id);
-        
-        // Load existing answers
-        const { data: existingAnswers } = await supabase
-          .from('screening_answers')
-          .select('*')
-          .eq('screening_id', existingScreening.id);
-
-        if (existingAnswers) {
-          setAnswers(existingAnswers.map(a => ({
-            question_id: a.question_id,
-            score: a.score
-          })));
-        }
-      } else {
-        // Create new screening
-        const { data: newScreening, error } = await supabase
-          .from('screenings')
-          .insert({
-            user_id: user?.id,
-            status: 'in_progress'
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-        setScreeningId(newScreening.id);
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Gagal memuat sesi skrining",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleAnswerChange = async (questionId: string, score: string) => {
-    const newAnswer: Answer = { question_id: questionId, score: parseInt(score) };
+  // Updated to include questionType
+  const handleAnswerChange = (questionId: string, score: string, questionType: 'gad7' | 'pass') => {
+    const newAnswer: Answer = { question_id: questionId, score: parseInt(score), question_type: questionType };
     
-    // Update local state
     const updatedAnswers = answers.filter(a => a.question_id !== questionId);
     updatedAnswers.push(newAnswer);
     setAnswers(updatedAnswers);
 
-    // Save to database
     if (screeningId) {
-      try {
-        const { error } = await supabase
-          .from('screening_answers')
-          .upsert({
-            screening_id: screeningId,
-            question_id: questionId,
-            score: parseInt(score)
-          });
-
-        if (error) throw error;
-      } catch (error: any) {
-        console.error('Error saving answer:', error);
-      }
+      const sessionStorageKey = `screening-answers-${screeningId}`;
+      sessionStorage.setItem(sessionStorageKey, JSON.stringify(updatedAnswers));
     }
   };
 
   const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      const newIndex = currentQuestionIndex + 1;
+      setCurrentQuestionIndex(newIndex);
+      if (screeningId) {
+        sessionStorage.setItem(`screening-index-${screeningId}`, newIndex.toString());
+      }
     }
   };
 
   const handlePrevious = () => {
     if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
+      const newIndex = currentQuestionIndex - 1;
+      setCurrentQuestionIndex(newIndex);
+      if (screeningId) {
+        sessionStorage.setItem(`screening-index-${screeningId}`, newIndex.toString());
+      }
     }
   };
 
@@ -181,13 +212,30 @@ export default function Screening() {
   };
 
   const handleComplete = async () => {
+    if (!screeningId || !user) return;
     setIsSubmitting(true);
     
     try {
+      // 1. Bulk save all answers, now including question_type
+      const answersToSave = answers.map(answer => ({
+        screening_id: screeningId,
+        question_id: answer.question_id,
+        score: answer.score,
+        question_type: answer.question_type, // Crucial fix: include the question type
+      }));
+
+      // Use upsert to prevent duplicate entries if user re-submits
+      const { error: answersError } = await supabase
+        .from('screening_answers')
+        .upsert(answersToSave, { onConflict: 'screening_id, question_id' });
+
+      if (answersError) throw answersError;
+      
+      // 2. Calculate final score and update the screening status
       const totalScore = answers.reduce((sum, answer) => sum + answer.score, 0);
       const anxietyLevel = calculateAnxietyLevel(totalScore);
 
-      const { error } = await supabase
+      const { error: screeningError } = await supabase
         .from('screenings')
         .update({
           status: 'completed',
@@ -197,18 +245,33 @@ export default function Screening() {
         })
         .eq('id', screeningId);
 
-      if (error) throw error;
+      if (screeningError) throw screeningError;
+
+      // 3. Update the user's profile to mark first login as false
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ is_first_login: false })
+        .eq('id', user.id);
+
+      if (profileError) {
+        console.error('Failed to update is_first_login flag:', profileError);
+      }
+      
+      // 4. Clean up session storage
+      sessionStorage.removeItem(`screening-answers-${screeningId}`);
+      sessionStorage.removeItem(`screening-index-${screeningId}`);
 
       toast({
         title: "Skrining Selesai!",
         description: "Hasil skrining Anda telah tersimpan.",
       });
-
+      
+      // 5. Navigate to results page
       navigate('/results', { state: { screeningId } });
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Gagal menyelesaikan skrining",
+        description: "Gagal menyelesaikan skrining: " + error.message,
         variant: "destructive",
       });
     } finally {
@@ -227,7 +290,7 @@ export default function Screening() {
   if (questions.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p>Tidak ada pertanyaan yang tersedia</p>
+        <p>Tidak ada pertanyaan yang tersedia untuk skrining ini.</p>
       </div>
     );
   }
@@ -240,7 +303,6 @@ export default function Screening() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10">
-      {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -251,7 +313,7 @@ export default function Screening() {
                 <p className="text-sm text-muted-foreground">Skrining Kecemasan</p>
               </div>
             </div>
-            <Button variant="outline" onClick={() => navigate('/dashboard')}>
+            <Button variant="outline" onClick={() => navigate('/quiz')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Kembali
             </Button>
@@ -260,7 +322,6 @@ export default function Screening() {
       </header>
 
       <div className="container mx-auto px-4 py-8 max-w-2xl">
-        {/* Progress */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-2">
             <p className="text-sm text-muted-foreground">
@@ -271,7 +332,6 @@ export default function Screening() {
           <Progress value={progress} className="h-2" />
         </div>
 
-        {/* Question Card */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="text-lg">
@@ -284,12 +344,13 @@ export default function Screening() {
           <CardContent>
             <RadioGroup
               value={currentAnswer?.score.toString() || ''}
-              onValueChange={(value) => handleAnswerChange(currentQuestion.id, value)}
+              // Pass question type to the handler
+              onValueChange={(value) => handleAnswerChange(currentQuestion.id, value, currentQuestion.type)}
             >
               {scoreOptions.map((option) => (
                 <div key={option.value} className="flex items-center space-x-2 p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                  <RadioGroupItem value={option.value} id={option.value} />
-                  <Label htmlFor={option.value} className="flex-1 cursor-pointer">
+                  <RadioGroupItem value={option.value} id={`${currentQuestion.id}-${option.value}`} />
+                  <Label htmlFor={`${currentQuestion.id}-${option.value}`} className="flex-1 cursor-pointer">
                     <div>
                       <p className="font-medium">{option.label}</p>
                       <p className="text-sm text-muted-foreground">{option.description}</p>
@@ -301,7 +362,6 @@ export default function Screening() {
           </CardContent>
         </Card>
 
-        {/* Navigation */}
         <div className="flex justify-between">
           <Button
             variant="outline"
@@ -331,7 +391,6 @@ export default function Screening() {
           )}
         </div>
 
-        {/* Instructions */}
         <div className="mt-8 p-4 bg-muted/30 rounded-lg">
           <p className="text-sm text-muted-foreground">
             <strong>Petunjuk:</strong> Pilih jawaban yang paling sesuai dengan kondisi Anda dalam 2 minggu terakhir. 

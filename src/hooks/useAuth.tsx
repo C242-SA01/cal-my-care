@@ -1,20 +1,17 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 import { User, Session, AuthError } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { Profile } from "@/integrations/supabase/types";
 
-// Define the structure of our user profile
-interface UserProfile {
-  id: string;
-  role: string;
-  is_first_login: boolean;
-  [key: string]: any;
-}
+// Define the structure of our user profile more concretely
+type UserProfile = Profile;
 
 interface AuthContextType {
   user: User | null;
   userProfile: UserProfile | null;
   session: Session | null;
   isProfileLoading: boolean;
+  isProfileComplete: boolean; // <- New
   signOut: () => Promise<void>;
   signIn: (
     email: string,
@@ -39,12 +36,37 @@ export const useAuth = () => {
   return context;
 };
 
+// Helper function to check profile completion
+const checkProfileComplete = (profile: UserProfile | null): boolean => {
+  if (!profile) return false;
+  // Admins and midwives don't need to fill out patient-specific data
+  if (profile.role === 'admin' || profile.role === 'midwife') return true;
+
+  // For patients, all these fields must be filled
+  const requiredFields: (keyof UserProfile)[] = [
+    'age',
+    'phone',
+    'gestational_age_weeks',
+    'trimester',
+    'education',
+    'occupation',
+  ];
+
+  return requiredFields.every(field => {
+    const value = profile[field];
+    return value !== null && value !== '' && value !== undefined;
+  });
+};
+
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isAuthLoading, setAuthLoading] = useState(true);
   const [isProfileLoading, setProfileLoading] = useState(true);
+
+  const isProfileComplete = useMemo(() => checkProfileComplete(userProfile), [userProfile]);
 
   const fetchProfile = useCallback(async (currentUser: User) => {
     setProfileLoading(true);
@@ -128,6 +150,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     userProfile,
     session,
     isProfileLoading: isAuthLoading || isProfileLoading,
+    isProfileComplete, // <- New
     signOut,
     signIn,
     signUp,

@@ -1,13 +1,14 @@
-import { Route, Routes, Navigate, Outlet, BrowserRouter } from 'react-router-dom';
+import { Route, Routes, Navigate, Outlet, BrowserRouter, useLocation } from 'react-router-dom';
 import Index from './pages/Index';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import Screening from './pages/Screening';
 import Results from './pages/Results';
 import AuthConfirm from './pages/AuthConfirm';
-import UpdatePassword from './pages/UpdatePassword'; // Import the new page
+import UpdatePassword from './pages/UpdatePassword';
 import { useAuth } from './hooks/useAuth';
 import NotFound from './pages/NotFound';
+import { Loader2 } from 'lucide-react';
 
 // Layouts
 import AdminLayout from './layouts/AdminLayout';
@@ -26,6 +27,10 @@ import History from './pages/History';
 import Education from './pages/Education';
 import EducationDetail from './pages/EducationDetail';
 import Profile from './pages/Profile';
+import ChatPage from './pages/ChatPage';
+import QuizList from './pages/QuizList';
+import CalmyPage from './pages/CalmyPage'; // Import CalmyPage
+import CalmyNoteForm from './pages/CalmyNoteForm'; // Import CalmyNoteForm
 
 // E-Modul Pages
 import EModulList from './pages/EModulList';
@@ -40,6 +45,33 @@ import EModulAdminForm from './pages/admin/EModulAdminForm';
  * A layout for public routes, or for users who are not authenticated yet.
  */
 const PublicLayout = () => <Outlet />;
+
+/**
+ * Gate to ensure new patients complete their profile before accessing the app.
+ */
+const ProfileCompletionGate = ({ children }: { children: React.ReactNode }) => {
+  const { userProfile, isProfileLoading, isProfileComplete, isAuthenticated } = useAuth();
+  const location = useLocation();
+
+  if (isProfileLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-gray-50">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-3 text-lg text-gray-600">Memuat data pengguna...</p>
+      </div>
+    );
+  }
+
+  const isPatient = userProfile?.role === 'patient';
+  // Corrected Logic: Redirect ANY patient with an incomplete profile
+  const needsToCompleteProfile = isAuthenticated && isPatient && !isProfileComplete;
+
+  if (needsToCompleteProfile && location.pathname !== '/profile') {
+    return <Navigate to="/profile" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+};
 
 /**
  * A route guard for authenticated users.
@@ -72,62 +104,63 @@ const PatientRouteGuard = () => {
 
 // --- Main App Router ---
 const Router = () => {
-  const { isProfileLoading } = useAuth();
-
-  if (isProfileLoading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    );
-  }
-
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Public Routes */}
-        <Route element={<PublicLayout />}>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/auth/confirm" element={<AuthConfirm />} />
-          <Route path="/update-password" element={<UpdatePassword />} />
-        </Route>
-
-        {/* Authenticated Routes */}
-        <Route element={<AuthenticatedRoute />}>
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminRouteGuard />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="patients" element={<PatientManagement />} />
-            <Route path="patient/:id" element={<PatientDetail />} />
-            <Route path="education" element={<EducationManagement />} />
-            <Route path="results" element={<ScreeningManagement />} />
-            <Route path="users" element={<AdminUserManagementPage />} />
-            <Route path="profile" element={<Profile />} />
-            {/* E-Modul Admin Routes */}
-            <Route path="emodules" element={<EModulAdminList />} />
-            <Route path="emodules/new" element={<EModulAdminForm />} />
-            <Route path="emodules/:id/edit" element={<EModulAdminForm />} />
+      <ProfileCompletionGate>
+        <Routes>
+          {/* Public Routes */}
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/confirm" element={<AuthConfirm />} />
+            <Route path="/update-password" element={<UpdatePassword />} />
           </Route>
 
-          {/* Regular User/Patient Routes */}
-          <Route element={<PatientRouteGuard />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/screening" element={<Screening />} />
-            <Route path="/results" element={<Results />} />
-            <Route path="/history" element={<History />} />
-            <Route path="/education" element={<Education />} />
-            <Route path="/education/:id" element={<EducationDetail />} />
+          {/* Authenticated Routes */}
+          <Route element={<AuthenticatedRoute />}>
+            {/* The Profile page is accessible to all authenticated users 
+                but is not part of a specific layout that might redirect away from it. */}
             <Route path="/profile" element={<Profile />} />
-            {/* E-Modul Patient Route */}
-            <Route path="/emodules" element={<EModulList />} />
-            <Route path="/emodules/:id" element={<PatientEModuleDetail />} />
-          </Route>
-        </Route>
 
-        {/* Fallback Not Found Route */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminRouteGuard />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="patients" element={<PatientManagement />} />
+              <Route path="patient/:id" element={<PatientDetail />} />
+              <Route path="education" element={<EducationManagement />} />
+              <Route path="results" element={<ScreeningManagement />} />
+              <Route path="users" element={<AdminUserManagementPage />} />
+              {/* E-Modul Admin Routes */}
+              <Route path="emodules" element={<EModulAdminList />} />
+              <Route path="emodules/new" element={<EModulAdminForm />} />
+              <Route path="emodules/:id/edit" element={<EModulAdminForm />} />
+            </Route>
+
+            {/* Regular User/Patient Routes */}
+            <Route element={<PatientRouteGuard />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/quiz" element={<QuizList />} />
+              <Route path="/quiz/:trimester" element={<Screening />} />
+              <Route path="/results" element={<Results />} />
+              <Route path="/history" element={<History />} />
+              <Route path="/education" element={<Education />} />
+              <Route path="/education/:id" element={<EducationDetail />} />
+              <Route path="/chatbot" element={<ChatPage />} /> {/* New Chatbot Route */}
+              {/* Calmy Routes */}
+              <Route path="/calmy" element={<CalmyPage />} />
+              <Route path="/calmy/new" element={<CalmyNoteForm />} />
+              <Route path="/calmy/:id/edit" element={<CalmyNoteForm />} />
+
+              {/* E-Modul Patient Route */}
+              <Route path="/emodules" element={<EModulList />} />
+              <Route path="/emodules/:id" element={<PatientEModuleDetail />} />
+            </Route>
+          </Route>
+
+          {/* Fallback Not Found Route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </ProfileCompletionGate>
     </BrowserRouter>
   );
 };

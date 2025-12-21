@@ -56,6 +56,7 @@ export default function EModulAdminForm() {
   });
 
   const isEditMode = !!id;
+  const draftKey = isEditMode ? `emodule-form-draft-${id}` : "emodule-form-draft-new";
 
   useEffect(() => {
     if (isEditMode) {
@@ -80,13 +81,42 @@ export default function EModulAdminForm() {
             ...data,
             tags: Array.isArray(data.tags) ? data.tags.join(", ") : "",
           };
-          form.reset(fetchedData);
+          
+          // Check for a saved draft and merge it
+          const savedDraft = sessionStorage.getItem(draftKey);
+          if (savedDraft) {
+            try {
+              const draftData = JSON.parse(savedDraft);
+              form.reset({ ...fetchedData, ...draftData });
+            } catch {
+              form.reset(fetchedData); // Fallback if draft is corrupt
+            }
+          } else {
+            form.reset(fetchedData);
+          }
         }
         setIsLoading(false);
       };
       fetchModule();
+    } else {
+      // For new modules, just check for a draft
+      const savedDraft = sessionStorage.getItem(draftKey);
+      if (savedDraft) {
+        try {
+          form.reset(JSON.parse(savedDraft));
+        } catch (error) {
+          console.error("Failed to parse draft for new e-module:", error);
+        }
+      }
     }
-  }, [id, form, toast, navigate, isEditMode]);
+  }, [id, form, toast, navigate, isEditMode, draftKey]);
+
+  // Watch for form changes and save to sessionStorage
+  const watchedValues = form.watch();
+  useEffect(() => {
+    sessionStorage.setItem(draftKey, JSON.stringify(watchedValues));
+  }, [watchedValues, draftKey]);
+
 
   const onSubmit = async (values: EModulFormValues) => {
     setIsLoading(true);
@@ -131,6 +161,8 @@ export default function EModulAdminForm() {
         title: "Success",
         description: `E-Modul ${isEditMode ? "updated" : "created"} successfully.`,
       });
+      // Clear the saved draft from session storage
+      sessionStorage.removeItem(draftKey);
       navigate("/admin/emodules");
     } catch (error: any) {
       toast({

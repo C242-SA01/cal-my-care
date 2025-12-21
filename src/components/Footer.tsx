@@ -1,4 +1,4 @@
-import { Heart, Mail, Phone, MapPin, Facebook, Twitter, Instagram } from "lucide-react";
+import { Heart, Mail, Phone, MapPin, Facebook, Twitter, Instagram } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -13,13 +13,10 @@ const Footer = () => {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-foreground">CalMyCare</h3>
-                <p className="text-xs text-muted-foreground">Platform Kesehatan Ibu</p>
+                <p className="text-xs text-muted-foreground">Platform Kesehatan Ibu Hamil Primigravida</p>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground max-w-sm">
-              Skrining kecemasan profesional dan dukungan edukasi untuk ibu baru. 
-              Mitra terpercaya Anda dalam kesehatan ibu.
-            </p>
+            <p className="text-sm text-muted-foreground max-w-sm">Skrining kecemasan profesional dan dukungan edukasi untuk ibu baru. Mitra terpercaya Anda dalam kesehatan ibu.</p>
             <div className="flex space-x-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors">
                 <Facebook className="h-4 w-4 text-primary" />
@@ -37,11 +34,36 @@ const Footer = () => {
           <div className="space-y-4">
             <h4 className="font-semibold text-foreground">Layanan</h4>
             <ul className="space-y-3 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-primary transition-colors">Skrining GAD-7</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Sumber Edukasi</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Kuis Interaktif</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Dasbor Bidan</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Rencana Perawatan Pribadi</a></li>
+              <li>
+                <a href="#" className="hover:text-primary transition-colors">
+                  Skrining PASS
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-primary transition-colors">
+                  E-Modul
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-primary transition-colors">
+                  Video Edukasi
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-primary transition-colors">
+                  Kuis Interaktif
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-primary transition-colors">
+                  Care
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-primary transition-colors">
+                  Calmy
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -49,11 +71,31 @@ const Footer = () => {
           <div className="space-y-4">
             <h4 className="font-semibold text-foreground">Sumber Daya</h4>
             <ul className="space-y-3 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-primary transition-colors">Tentang GAD-7</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Panduan Kesehatan Ibu</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Grup Dukungan</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Kontak Darurat</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Kebijakan Privasi</a></li>
+              <li>
+                <a href="#" className="hover:text-primary transition-colors">
+                  Tentang PASS
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-primary transition-colors">
+                  Panduan Kesehatan Ibu
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-primary transition-colors">
+                  Grup Dukungan
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-primary transition-colors">
+                  Kontak Darurat
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-primary transition-colors">
+                  Kebijakan Privasi
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -71,12 +113,17 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-3">
                 <MapPin className="h-4 w-4 text-primary" />
-                <span className="text-sm text-muted-foreground">Pusat Kesehatan<br />Jl. Sehat 123</span>
+                <span className="text-sm text-muted-foreground">
+                  Pusat Kesehatan
+                  <br />
+                  Jl. Sehat 123
+                </span>
               </div>
             </div>
             <div className="p-4 rounded-lg bg-accent border border-maternal/20">
               <p className="text-xs text-muted-foreground">
-                <strong className="text-maternal">Dukungan Krisis 24/7:</strong><br />
+                <strong className="text-maternal">Dukungan Krisis 24/7:</strong>
+                <br />
                 Jika Anda mengalami keadaan darurat kesehatan mental, harap segera hubungi layanan darurat setempat.
               </p>
             </div>
@@ -85,13 +132,17 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-          <div className="text-sm text-muted-foreground">
-            © 2024 CalMyCare. Hak cipta dilindungi. | Dikembangkan untuk skrining dan edukasi kesehatan ibu.
-          </div>
+          <div className="text-sm text-muted-foreground">© 2024 CalMyCare. Hak cipta dilindungi. | Dikembangkan untuk skrining dan edukasi kesehatan ibu.</div>
           <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-            <a href="#" className="hover:text-primary transition-colors">Ketentuan Layanan</a>
-            <a href="#" className="hover:text-primary transition-colors">Kebijakan Privasi</a>
-            <a href="#" className="hover:text-primary transition-colors">Kepatuhan HIPAA</a>
+            <a href="#" className="hover:text-primary transition-colors">
+              Ketentuan Layanan
+            </a>
+            <a href="#" className="hover:text-primary transition-colors">
+              Kebijakan Privasi
+            </a>
+            <a href="#" className="hover:text-primary transition-colors">
+              Kepatuhan HIPAA
+            </a>
           </div>
         </div>
       </div>

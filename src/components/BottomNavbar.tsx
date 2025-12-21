@@ -1,12 +1,13 @@
-import { Home, FileText, BookOpen, LayoutDashboard, BookOpenCheck } from 'lucide-react';
+import { Home, ClipboardList, BookOpen, LayoutDashboard, Heart } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 const menuItems = [
   { to: '/dashboard', icon: Home, label: 'Home' },
-  { to: '/screening', icon: FileText, label: 'Skrining' },
+  { to: '/quiz', icon: ClipboardList, label: 'Quiz' },
+  { to: '/calmy', icon: Heart, label: 'Calmy' },
   { to: '/education', icon: BookOpen, label: 'Edukasi' },
-  { to: '/history', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/emodules', icon: BookOpenCheck, label: 'E-Module' },
+  // { to: '/history', icon: LayoutDashboard, label: 'Riwayat' },
+  { to: '/history', icon: LayoutDashboard, label: 'Care' },
 ];
 
 const BottomNavbar = () => {

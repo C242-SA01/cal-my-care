@@ -155,14 +155,19 @@ export default function EModulAdminList() {
 
       {selectedModule && (
         <Dialog open={!!selectedModule} onOpenChange={(isOpen) => !isOpen && setSelectedModule(null)}>
-          <DialogContent className="max-w-4xl h-5/6 flex flex-col">
-            <DialogHeader>
+          <DialogContent className="max-w-7xl h-[90vh] flex flex-col p-0">
+            <DialogHeader className="p-6 pb-4">
               <DialogTitle>{selectedModule.title}</DialogTitle>
               <DialogDescription>{selectedModule.description}</DialogDescription>
             </DialogHeader>
-            <div className="flex-grow">
+            <div className="flex-grow overflow-hidden">
               {selectedModule.file_url ? (
-                <FlipbookViewer pdfUrl={selectedModule.file_url} />
+                <FlipbookViewer
+                  pdfUrl={selectedModule.file_url}
+                  title={selectedModule.title}
+                  cover={selectedModule.cover_image_url}
+                  maxViewerHeight={window.innerHeight * 0.8} // Pass down a sensible max height
+                />
               ) : (
                 <div className="flex items-center justify-center h-full">
                   <p>No PDF available for this module.</p>

@@ -18,9 +18,9 @@ BEGIN
     VALUES (target_user_id)
     ON CONFLICT (user_id) DO NOTHING;
   ELSE
-    -- Revoke admin status and set role to 'mother'
+    -- Revoke admin status and set role to 'patient'
     UPDATE public.profiles
-    SET role = 'mother' -- Set back to the default patient role
+    SET role = 'patient' -- Set back to the default patient role
     WHERE id = target_user_id;
 
     DELETE FROM public.admins

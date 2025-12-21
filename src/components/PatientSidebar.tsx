@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, BookOpen, FileText, History, LogOut, Package2, User as UserIcon } from 'lucide-react';
+import { Home, BookOpen, History, LogOut, Package2, User as UserIcon, ClipboardList, Heart } from 'lucide-react';
 import { Button } from './ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -26,11 +26,13 @@ const PatientSidebarContent = ({ onLinkClick }: PatientSidebarContentProps) => {
 
   const menuItems = [
     { to: '/dashboard', icon: Home, label: 'Dashboard' },
-    { to: '/screening', icon: FileText, label: 'Mulai Skrining' },
-    { to: '/history', icon: History, label: 'Riwayat Hasil' },
+    { to: '/quiz', icon: ClipboardList, label: 'Quiz' },
+    // { to: '/history', icon: History, label: 'Riwayat Hasil' },
+    { to: '/history', icon: History, label: 'Care' },
     { to: '/education', icon: BookOpen, label: 'Edukasi' },
-    { to: '/profile', icon: UserIcon, label: 'Profil' },
     { to: '/emodules', icon: Package2, label: 'E-Modul' },
+    { to: '/calmy', icon: Heart, label: 'Calmy' },
+    { to: '/profile', icon: UserIcon, label: 'Profil' },
   ];
 
   return (

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -7,28 +8,50 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, User as UserIcon, Edit, KeyRound } from 'lucide-react';
+import { markFirstLoginAsCompleted } from '@/lib/user';
+import { useFormPersistence } from '@/hooks/useFormPersistence';
+import { Loader2, User as UserIcon, Edit, KeyRound, Info, AlertTriangle } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const inputClasses = 'rounded-2xl border-pink-100 bg-white/80 focus-visible:ring-2 focus-visible:ring-pink-300 focus-visible:ring-offset-0';
 const selectTriggerClasses = 'rounded-2xl border-pink-100 bg-white/80 focus-visible:ring-2 focus-visible:ring-pink-300 focus-visible:ring-offset-0';
 
+interface ProfileFormState {
+  fullName: string;
+  phone: string;
+  age: string | number;
+  gestationalAgeWeeks: string | number;
+  trimester: string;
+  education: string;
+  occupation: string;
+}
+
 const Profile = () => {
-  const { user, userProfile, isProfileLoading, refreshUserProfile } = useAuth();
+  const { user, userProfile, isProfileLoading, refreshUserProfile, isProfileComplete } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const isFirstLogin = userProfile?.is_first_login === true && !isProfileComplete;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  // Form state
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [age, setAge] = useState<string | number>('');
-  const [gestationalAgeWeeks, setGestationalAgeWeeks] = useState<string | number>('');
-  const [trimester, setTrimester] = useState('');
-  const [education, setEducation] = useState('');
-  const [occupation, setOccupation] = useState('');
+  const [isDialogOpen, setIsDialogOpen] = useState(isFirstLogin);
+  
+  // Form state managed by the persistence hook
+  const [formState, setFormState, clearFormState] = useFormPersistence<ProfileFormState>(
+    `profile-form-draft-${user?.id || 'guest'}`,
+    {
+      fullName: '',
+      phone: '',
+      age: '',
+      gestationalAgeWeeks: '',
+      trimester: '',
+      education: '',
+      occupation: '',
+    }
+  );
 
   // Password change state
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
@@ -42,16 +65,26 @@ const Profile = () => {
   const isHealthStaff = userProfile?.role === 'admin' || userProfile?.role === 'midwife';
 
   useEffect(() => {
-    if (userProfile && isDialogOpen) {
-      setFullName(userProfile.full_name || '');
-      setPhone(userProfile.phone || '');
-      setAge(userProfile.age || '');
-      setGestationalAgeWeeks(userProfile.gestational_age_weeks || '');
-      setTrimester(userProfile.trimester || '');
-      setEducation(userProfile.education || '');
-      setOccupation(userProfile.occupation || '');
+    // Pre-fill form when dialog opens OR on first load if it's the first login
+    if (userProfile && (isDialogOpen || isFirstLogin)) {
+      setFormState({
+        fullName: userProfile.full_name || '',
+        phone: userProfile.phone || '',
+        age: userProfile.age || '',
+        gestationalAgeWeeks: userProfile.gestational_age_weeks || '',
+        trimester: userProfile.trimester || '',
+        education: userProfile.education || '',
+        occupation: userProfile.occupation || '',
+      });
     }
-  }, [userProfile, isDialogOpen]);
+  }, [userProfile, isDialogOpen, isFirstLogin, setFormState]);
+
+  // Automatically redirect to dashboard if profile is already complete for patients
+  useEffect(() => {
+    if (!isProfileLoading && isProfileComplete && !isHealthStaff) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isProfileComplete, isProfileLoading, isHealthStaff, navigate]);
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U';
@@ -67,29 +100,52 @@ const Profile = () => {
     e.preventDefault();
     if (!user) return;
 
+    // Simple validation check
+    if (!isHealthStaff && (!formState.fullName || !formState.phone || !formState.age || !formState.gestationalAgeWeeks || !formState.trimester || !formState.education || !formState.occupation)) {
+      toast({
+        title: 'Data Belum Lengkap',
+        description: 'Mohon lengkapi semua field yang wajib diisi sebelum melanjutkan.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const { error } = await supabase
         .from('profiles')
         .update({
-          full_name: fullName,
-          phone,
-          age: age ? parseInt(String(age), 10) : null,
-          gestational_age_weeks: gestationalAgeWeeks ? parseInt(String(gestationalAgeWeeks), 10) : null,
-          trimester: trimester || null,
-          education: education || null,
-          occupation: occupation || null,
+          full_name: formState.fullName,
+          phone: formState.phone,
+          age: formState.age ? parseInt(String(formState.age), 10) : null,
+          gestational_age_weeks: formState.gestationalAgeWeeks ? parseInt(String(formState.gestationalAgeWeeks), 10) : null,
+          trimester: formState.trimester || null,
+          education: formState.education || null,
+          occupation: formState.occupation || null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
 
       if (error) throw error;
-
-      toast({
-        title: 'Berhasil',
-        description: 'Profil Anda telah diperbarui.',
-      });
+      
+      clearFormState(); // Clear the draft from session storage
       await refreshUserProfile();
+
+      // If it was the first login, mark it as completed and redirect
+      if (isFirstLogin) {
+        await markFirstLoginAsCompleted();
+        toast({
+          title: 'Selamat Datang!',
+          description: 'Profil Anda telah berhasil disimpan. Anda kini dapat menjelajahi aplikasi.',
+        });
+        navigate('/dashboard', { replace: true });
+      } else {
+        toast({
+          title: 'Berhasil',
+          description: 'Profil Anda telah diperbarui.',
+        });
+      }
+
       setIsDialogOpen(false);
     } catch (error: any) {
       toast({
@@ -165,6 +221,47 @@ const Profile = () => {
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-gradient-to-b from-pink-50 via-rose-50/60 to-amber-50/40 px-4 py-6 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-6">
+        {/* First Login Alert */}
+        {isFirstLogin && (
+          <Alert className="bg-amber-100/60 border-amber-300 text-amber-800 rounded-2xl">
+            <Info className="h-4 w-4 !text-amber-800" />
+            <AlertDescription>
+              Selamat datang di CalMyCare! Mohon lengkapi data profil Anda untuk melanjutkan.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Incomplete Profile Warning & Guide */}
+        {!isHealthStaff && !isProfileComplete && !isFirstLogin && (
+          <Card className="bg-red-100/60 border-red-300 rounded-2xl">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="h-5 w-5 text-red-700" />
+                <div className='space-y-1'>
+                  <CardTitle className="text-red-800 text-base">Profil Anda Belum Lengkap</CardTitle>
+                  <CardDescription className="text-red-700 text-sm">
+                    Mohon perbarui semua data wajib untuk fungsionalitas aplikasi yang optimal.
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="item-1" className="border-red-200">
+                  <AccordionTrigger className="text-red-700 hover:no-underline text-sm font-medium">
+                    Bagaimana Cara Melengkapi Profil?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-slate-600 text-sm space-y-2 pt-2">
+                    <p><strong>Langkah 1:</strong> Klik tombol <strong>"Edit Profil"</strong> berwarna pink yang ada di kartu profil Anda di bawah.</p>
+                    <p><strong>Langkah 2:</strong> Pada formulir yang muncul, isi semua kolom di bagian <strong>Data Pribadi</strong>, <strong>Data Kehamilan</strong>, dan <strong>Data Demografi</strong>.</p>
+                    <p><strong>Langkah 3:</strong> Setelah semua data terisi, klik tombol <strong>"Simpan Perubahan"</strong> di bagian bawah formulir untuk menyimpan informasi Anda.</p>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Page header */}
         <div className="flex items-center gap-3">
           <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-pink-100 text-pink-600">
@@ -202,8 +299,15 @@ const Profile = () => {
               </DialogTrigger>
               <DialogContent className="sm:max-w-[720px] rounded-3xl bg-white p-6 sm:p-8">
                 <DialogHeader className="space-y-1">
-                  <DialogTitle className="text-lg font-semibold text-slate-800">Edit Profil</DialogTitle>
-                  <p className="text-sm text-slate-500">Perbarui data Anda agar rekomendasi CalMyCare lebih tepat.</p>
+                  <DialogTitle className="text-lg font-semibold text-slate-800">
+                    {isFirstLogin ? 'Lengkapi Profil Anda' : 'Edit Profil'}
+                  </DialogTitle>
+                  <p className="text-sm text-slate-500">
+                    {isFirstLogin
+                      ? 'Silakan isi semua data di bawah ini untuk mendapatkan pengalaman terbaik.'
+                      : 'Perbarui data Anda agar rekomendasi CalMyCare lebih tepat.'
+                    }
+                  </p>
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-6 mt-4">
@@ -213,7 +317,7 @@ const Profile = () => {
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div className="space-y-2 sm:col-span-2">
                         <Label htmlFor="fullName">Nama Lengkap</Label>
-                        <Input id="fullName" className={inputClasses} value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                        <Input id="fullName" className={inputClasses} value={formState.fullName} onChange={(e) => setFormState({ ...formState, fullName: e.target.value })} />
                       </div>
                       <div className="space-y-2 sm:col-span-2">
                         <Label>Email</Label>
@@ -221,69 +325,64 @@ const Profile = () => {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="phone">Nomor Telepon</Label>
-                        <Input id="phone" className={inputClasses} value={phone} onChange={(e) => setPhone(e.target.value)} />
+                        <Input id="phone" className={inputClasses} value={formState.phone} onChange={(e) => setFormState({ ...formState, phone: e.target.value })} />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="age">Usia</Label>
-                        <Input id="age" type="number" className={inputClasses} value={age} onChange={(e) => setAge(e.target.value)} />
+                        <Input id="age" type="number" className={inputClasses} value={formState.age} onChange={(e) => setFormState({ ...formState, age: e.target.value })} />
                       </div>
                     </div>
                     {/* Change Password Dialog Trigger */}
-                    <div className="flex justify-end">
-                      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
-                        <DialogTrigger asChild>
-                           <Button type="button" variant="outline" className="rounded-2xl border-pink-200 bg-white text-pink-700 hover:bg-pink-50 hover:text-pink-800">
-                            Ubah Password
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-md rounded-3xl bg-white p-6 sm:p-8">
-                          <DialogHeader>
-                            <DialogTitle>Ubah Password</DialogTitle>
-                            <CardDescription>Masukkan password baru Anda.</CardDescription>
-                          </DialogHeader>
-                          <form onSubmit={handlePasswordUpdate} className="space-y-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="newPassword">Password Baru</Label>
-                              <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={inputClasses} />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="confirmPassword">Konfirmasi Password Baru</Label>
-                              <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputClasses} />
-                            </div>
-                            <DialogFooter>
-                               <DialogClose asChild>
-                                <Button type="button" variant="ghost" className="rounded-2xl">Batal</Button>
-                              </DialogClose>
-                              <Button type="submit" disabled={isUpdatingPassword} className="rounded-2xl bg-pink-500 text-white hover:bg-pink-600">
-                                {isUpdatingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Simpan Password Baru
-                              </Button>
-                            </DialogFooter>
-                          </form>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
+                    {!isFirstLogin && (
+                      <div className="flex justify-end">
+                        <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button type="button" variant="outline" className="rounded-2xl border-pink-200 bg-white text-pink-700 hover:bg-pink-50 hover:text-pink-800">
+                              Ubah Password
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-md rounded-3xl bg-white p-6 sm:p-8">
+                            <DialogHeader>
+                              <DialogTitle>Ubah Password</DialogTitle>
+                              <CardDescription>Masukkan password baru Anda.</CardDescription>
+                            </DialogHeader>
+                            <form onSubmit={handlePasswordUpdate} className="space-y-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="newPassword">Password Baru</Label>
+                                <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={inputClasses} />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="confirmPassword">Konfirmasi Password Baru</Label>
+                                <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputClasses} />
+                              </div>
+                              <DialogFooter>
+                                <DialogClose asChild>
+                                  <Button type="button" variant="ghost" className="rounded-2xl">Batal</Button>
+                                </DialogClose>
+                                <Button type="submit" disabled={isUpdatingPassword} className="rounded-2xl bg-pink-500 text-white hover:bg-pink-600">
+                                  {isUpdatingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                  Simpan Password Baru
+                                </Button>
+                              </DialogFooter>
+                            </form>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    )}
                   </div>
 
                   {/* Data Kehamilan – hidden untuk admin & bidan */}
                   {!isHealthStaff && (
                     <div className="space-y-4">
                       <h3 className="text-sm font-semibold text-pink-700">Data Kehamilan</h3>
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
                           <Label htmlFor="gestationalAgeWeeks">Usia Kehamilan (minggu)</Label>
-                          <Input id="gestationalAgeWeeks" type="number" className={inputClasses} value={gestationalAgeWeeks} onChange={(e) => setGestationalAgeWeeks(e.target.value)} />
-                        </div>
-                        <div className="space-y-2 sm:col-span-2">
-                          <Label>Status Ibu (Primigravida)</Label>
-                          <div className="h-10 rounded-2xl border border-pink-100 bg-slate-50 px-3 text-sm flex items-center text-slate-500">
-                            {/* Sesuaikan dengan field sebenarnya di Supabase, misal is_primigravida/pregnancy_status */}
-                            {userProfile?.pregnancy_status || '-'}
-                          </div>
+                          <Input id="gestationalAgeWeeks" type="number" className={inputClasses} value={formState.gestationalAgeWeeks} onChange={(e) => setFormState({ ...formState, gestationalAgeWeeks: e.target.value })} />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="trimester">Trimester</Label>
-                          <Select value={trimester} onValueChange={setTrimester}>
+                          <Select value={formState.trimester} onValueChange={(value) => setFormState({ ...formState, trimester: value })}>
                             <SelectTrigger id="trimester" className={selectTriggerClasses}>
                               <SelectValue placeholder="Pilih Trimester" />
                             </SelectTrigger>
@@ -304,7 +403,7 @@ const Profile = () => {
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor="education">Pendidikan</Label>
-                        <Select value={education} onValueChange={setEducation}>
+                        <Select value={formState.education} onValueChange={(value) => setFormState({ ...formState, education: value })}>
                           <SelectTrigger id="education" className={selectTriggerClasses}>
                             <SelectValue placeholder="Pilih Pendidikan" />
                           </SelectTrigger>
@@ -319,24 +418,22 @@ const Profile = () => {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="occupation">Pekerjaan</Label>
-                        <Input id="occupation" className={inputClasses} value={occupation} onChange={(e) => setOccupation(e.target.value)} />
-                      </div>
-                      <div className="space-y-2 sm:col-span-2">
-                        <Label>Role</Label>
-                        <div className="h-10 rounded-2xl border border-pink-100 bg-slate-50 px-3 text-sm flex items-center text-slate-500">{userProfile?.role ? String(userProfile.role).toLowerCase() : '-'}</div>
+                        <Input id="occupation" className={inputClasses} value={formState.occupation} onChange={(e) => setFormState({ ...formState, occupation: e.target.value })} />
                       </div>
                     </div>
                   </div>
 
                   <DialogFooter className="mt-4 flex items-center justify-end gap-2">
-                    <DialogClose asChild>
-                      <Button type="button" variant="ghost" className="rounded-2xl">
-                        Batal
-                      </Button>
-                    </DialogClose>
+                    {!isFirstLogin && (
+                      <DialogClose asChild>
+                        <Button type="button" variant="ghost" className="rounded-2xl">
+                          Batal
+                        </Button>
+                      </DialogClose>
+                    )}
                     <Button type="submit" disabled={isSubmitting} className="rounded-2xl bg-pink-500 text-white hover:bg-pink-600">
                       {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Simpan Perubahan
+                      {isFirstLogin ? 'Simpan dan Lanjutkan' : 'Simpan Perubahan'}
                     </Button>
                   </DialogFooter>
                 </form>
@@ -377,14 +474,10 @@ const Profile = () => {
             {!isHealthStaff && (
               <section className="space-y-3">
                 <h2 className="text-sm font-semibold text-slate-800">Data Kehamilan</h2>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 text-sm">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 text-sm">
                   <div className="space-y-1">
                     <p className="text-slate-400">Usia Kehamilan</p>
                     <p className="font-medium text-slate-800">{userProfile?.gestational_age_weeks ? `${userProfile.gestational_age_weeks} minggu` : '-'}</p>
-                  </div>
-                  <div className="space-y-1 sm:col-span-2">
-                    <p className="text-slate-400">Status Ibu (Primigravida / lainnya)</p>
-                    <p className="font-medium text-slate-800">{userProfile?.pregnancy_status || '-'}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-slate-400">Trimester</p>
@@ -405,12 +498,6 @@ const Profile = () => {
                 <div className="space-y-1">
                   <p className="text-slate-400">Pekerjaan</p>
                   <p className="font-medium text-slate-800">{userProfile?.occupation || '-'}</p>
-                </div>
-                <div className="space-y-1 sm:col-span-2">
-                  <p className="text-slate-400">Role</p>
-                  <p className="font-medium text-slate-800" style={{ textTransform: 'capitalize' }}>
-                    {userProfile?.role || '-'}
-                  </p>
                 </div>
               </div>
             </section>

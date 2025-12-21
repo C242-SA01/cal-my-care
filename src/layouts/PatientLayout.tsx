@@ -4,6 +4,7 @@ import BottomNavbar from "@/components/BottomNavbar";
 import { PatientHeader } from "@/components/PatientHeader";
 import { useMobile } from "@/hooks/use-mobile";
 import { useFirstTimeGate } from "@/hooks/useFirstTimeGate";
+import ChatBubble from "@/components/ChatBubble"; // Import ChatBubble
 
 const PatientLayout = () => {
   useFirstTimeGate(); // Enforce first-time screening
@@ -28,6 +29,7 @@ const PatientLayout = () => {
 
       {/* Bottom Navbar for Mobile */}
       {isMobile && <BottomNavbar />}
+      <ChatBubble /> {/* ChatBubble component */}
     </div>
   );
 };

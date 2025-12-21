@@ -18,7 +18,7 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS consent_date timestamp with
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now();
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now();
 
--- Create GAD-7 questions table
+-- Create PASS questions table
 CREATE TABLE public.gad7_questions (
     id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
     question_text text NOT NULL,
@@ -26,7 +26,7 @@ CREATE TABLE public.gad7_questions (
     created_at timestamp with time zone DEFAULT now()
 );
 
--- Insert GAD-7 questions
+-- Insert PASS questions
 INSERT INTO public.gad7_questions (question_text, question_order) VALUES
 ('Merasa gugup, cemas, atau tegang', 1),
 ('Tidak dapat menghentikan atau mengendalikan rasa khawatir', 2),
@@ -169,8 +169,8 @@ ON public.educational_materials
 FOR ALL 
 USING (true); -- WORKAROUND: Temporarily allowing all authenticated users as 'role' column is missing.
 
--- Create RLS policies for GAD-7 questions
-CREATE POLICY "Everyone can view GAD-7 questions" 
+-- Create RLS policies for PASS questions
+CREATE POLICY "Everyone can view PASS questions" 
 ON public.gad7_questions 
 FOR SELECT 
 USING (true);

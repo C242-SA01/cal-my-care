@@ -79,7 +79,7 @@ export const EducationForm = ({
 
   // This functionality is now less relevant with file uploads but kept for other fields
   useEffect(() => {
-    const savedDraft = localStorage.getItem(draftKey);
+    const savedDraft = sessionStorage.getItem(draftKey);
     if (savedDraft) {
       try {
         const draftData = JSON.parse(savedDraft);
@@ -96,7 +96,7 @@ export const EducationForm = ({
   useEffect(() => {
     // Don't save file objects in localStorage
     const { image_file, ...rest } = watchedValues;
-    localStorage.setItem(draftKey, JSON.stringify(rest));
+    sessionStorage.setItem(draftKey, JSON.stringify(rest));
   }, [watchedValues, draftKey]);
 
   const handleFormSubmit = useCallback(

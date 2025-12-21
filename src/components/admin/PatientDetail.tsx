@@ -1,21 +1,13 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { Calendar, User, Baby, Download, FileText } from "lucide-react";
-import { format, parseISO } from "date-fns";
-import { id } from "date-fns/locale";
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Calendar, User, Baby, Download, FileText } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { id } from 'date-fns/locale';
 
 interface PatientDetailProps {
   patient: {
@@ -56,16 +48,12 @@ const PatientDetail = ({ patient }: PatientDetailProps) => {
 
   const fetchScreeningHistory = async () => {
     try {
-      const { data, error } = await supabase
-        .from("screenings")
-        .select("*")
-        .eq("user_id", patient.id)
-        .order("created_at", { ascending: true });
+      const { data, error } = await supabase.from('screenings').select('*').eq('user_id', patient.id).order('created_at', { ascending: true });
 
       if (error) throw error;
       setScreenings(data || []);
     } catch (error) {
-      console.error("Error fetching screening history:", error);
+      console.error('Error fetching screening history:', error);
     } finally {
       setLoading(false);
     }
@@ -74,63 +62,66 @@ const PatientDetail = ({ patient }: PatientDetailProps) => {
   const fetchScreeningAnswers = async (screeningId: string) => {
     try {
       const { data, error } = await supabase
-        .from("screening_answers")
-        .select(`
+        .from('screening_answers')
+        .select(
+          `
           question_id,
           score,
           gad7_questions!inner(question_text)
-        `)
-        .eq("screening_id", screeningId)
-        .order("question_id", { ascending: true });
+        `
+        )
+        .eq('screening_id', screeningId)
+        .order('question_id', { ascending: true });
 
       if (error) throw error;
 
-      const formattedAnswers = data?.map((item: any) => ({
-        question_id: item.question_id,
-        score: item.score,
-        question_text: item.gad7_questions.question_text,
-      })) || [];
+      const formattedAnswers =
+        data?.map((item: any) => ({
+          question_id: item.question_id,
+          score: item.score,
+          question_text: item.gad7_questions.question_text,
+        })) || [];
 
       setAnswers(formattedAnswers);
     } catch (error) {
-      console.error("Error fetching screening answers:", error);
+      console.error('Error fetching screening answers:', error);
     }
   };
 
   const getAnxietyText = (level: string | null) => {
     switch (level) {
-      case "minimal":
-        return "Minimal";
-      case "mild":
-        return "Ringan";
-      case "moderate":
-        return "Sedang";
-      case "severe":
-        return "Berat";
+      case 'minimal':
+        return 'Minimal';
+      case 'mild':
+        return 'Ringan';
+      case 'moderate':
+        return 'Sedang';
+      case 'severe':
+        return 'Berat';
       default:
-        return "Belum ada";
+        return 'Belum ada';
     }
   };
 
   const getAnxietyColor = (level: string | null) => {
     switch (level) {
-      case "minimal":
-        return "hsl(var(--success))";
-      case "mild":
-        return "hsl(var(--warning))";
-      case "moderate":
-        return "hsl(var(--destructive))";
-      case "severe":
-        return "hsl(var(--destructive))";
+      case 'minimal':
+        return 'hsl(var(--success))';
+      case 'mild':
+        return 'hsl(var(--warning))';
+      case 'moderate':
+        return 'hsl(var(--destructive))';
+      case 'severe':
+        return 'hsl(var(--destructive))';
       default:
-        return "hsl(var(--muted-foreground))";
+        return 'hsl(var(--muted-foreground))';
     }
   };
 
   const chartData = screenings
-    .filter(s => s.status === "completed" && s.total_score !== null)
-    .map(screening => ({
-      date: format(parseISO(screening.created_at), "dd/MM", { locale: id }),
+    .filter((s) => s.status === 'completed' && s.total_score !== null)
+    .map((screening) => ({
+      date: format(parseISO(screening.created_at), 'dd/MM', { locale: id }),
       skor: screening.total_score,
       level: screening.anxiety_level,
     }));
@@ -138,31 +129,33 @@ const PatientDetail = ({ patient }: PatientDetailProps) => {
   const exportPatientReport = () => {
     const reportContent = [
       `LAPORAN PASIEN - ${patient.full_name}`,
-      `Tanggal: ${format(new Date(), "dd MMMM yyyy", { locale: id })}`,
-      "",
-      "=== INFORMASI PASIEN ===",
-      `Nama: ${patient.full_name || "-"}`,
-      `Email: ${patient.email || "-"}`,
-      `Usia Kehamilan: ${patient.gestational_age ? `${patient.gestational_age} minggu` : "-"}`,
-      `Primigravida: ${patient.is_primigravida ? "Ya" : "Tidak"}`,
-      `Tanggal Daftar: ${format(parseISO(patient.created_at), "dd MMMM yyyy", { locale: id })}`,
-      "",
-      "=== RIWAYAT SKRINING ===",
-      ...screenings.map((screening, index) => [
-        `${index + 1}. Tanggal: ${format(parseISO(screening.created_at), "dd MMMM yyyy HH:mm", { locale: id })}`,
-        `   Status: ${screening.status === "completed" ? "Selesai" : "Belum Selesai"}`,
-        `   Skor: ${screening.total_score || "-"}`,
-        `   Tingkat Kecemasan: ${getAnxietyText(screening.anxiety_level)}`,
-        `   Catatan: ${screening.notes || "-"}`,
-        ""
-      ]).flat(),
-    ].join("\n");
+      `Tanggal: ${format(new Date(), 'dd MMMM yyyy', { locale: id })}`,
+      '',
+      '=== INFORMASI PASIEN ===',
+      `Nama: ${patient.full_name || '-'}`,
+      `Email: ${patient.email || '-'}`,
+      `Usia Kehamilan: ${patient.gestational_age ? `${patient.gestational_age} minggu` : '-'}`,
+      `Primigravida: ${patient.is_primigravida ? 'Ya' : 'Tidak'}`,
+      `Tanggal Daftar: ${format(parseISO(patient.created_at), 'dd MMMM yyyy', { locale: id })}`,
+      '',
+      '=== RIWAYAT SKRINING ===',
+      ...screenings
+        .map((screening, index) => [
+          `${index + 1}. Tanggal: ${format(parseISO(screening.created_at), 'dd MMMM yyyy HH:mm', { locale: id })}`,
+          `   Status: ${screening.status === 'completed' ? 'Selesai' : 'Belum Selesai'}`,
+          `   Skor: ${screening.total_score || '-'}`,
+          `   Tingkat Kecemasan: ${getAnxietyText(screening.anxiety_level)}`,
+          `   Catatan: ${screening.notes || '-'}`,
+          '',
+        ])
+        .flat(),
+    ].join('\n');
 
-    const blob = new Blob([reportContent], { type: "text/plain;charset=utf-8" });
+    const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
-    a.download = `laporan-${patient.full_name?.replace(/\s+/g, "-") || "pasien"}-${format(new Date(), "yyyy-MM-dd")}.txt`;
+    a.download = `laporan-${patient.full_name?.replace(/\s+/g, '-') || 'pasien'}-${format(new Date(), 'yyyy-MM-dd')}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -197,7 +190,7 @@ const PatientDetail = ({ patient }: PatientDetailProps) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Nama Lengkap</p>
-              <p className="font-medium">{patient.full_name || "Tidak ada nama"}</p>
+              <p className="font-medium">{patient.full_name || 'Tidak ada nama'}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Email</p>
@@ -207,21 +200,19 @@ const PatientDetail = ({ patient }: PatientDetailProps) => {
               <p className="text-sm text-muted-foreground">Usia Kehamilan</p>
               <p className="font-medium flex items-center gap-2">
                 <Baby className="h-4 w-4" />
-                {patient.gestational_age ? `${patient.gestational_age} minggu` : "Belum diisi"}
+                {patient.gestational_age ? `${patient.gestational_age} minggu` : 'Belum diisi'}
               </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Tanggal Daftar</p>
               <p className="font-medium flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                {format(parseISO(patient.created_at), "dd MMMM yyyy", { locale: id })}
+                {format(parseISO(patient.created_at), 'dd MMMM yyyy', { locale: id })}
               </p>
             </div>
             <div className="md:col-span-2">
               <p className="text-sm text-muted-foreground">Status Kehamilan</p>
-              <Badge variant="outline">
-                {patient.is_primigravida ? "Primigravida (Kehamilan Pertama)" : "Multigravida"}
-              </Badge>
+              <Badge variant="outline">{patient.is_primigravida ? 'Primigravida (Kehamilan Pertama)' : 'Multigravida'}</Badge>
             </div>
           </div>
         </CardContent>
@@ -239,20 +230,8 @@ const PatientDetail = ({ patient }: PatientDetailProps) => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
                 <YAxis domain={[0, 21]} />
-                <Tooltip 
-                  labelFormatter={(label) => `Tanggal: ${label}`}
-                  formatter={(value: any, name: string) => [
-                    `${value} (${getAnxietyText(chartData.find(d => d.skor === value)?.level || null)})`,
-                    "Skor GAD-7"
-                  ]}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="skor" 
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth={2}
-                  dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 4 }}
-                />
+                <Tooltip labelFormatter={(label) => `Tanggal: ${label}`} formatter={(value: any, name: string) => [`${value} (${getAnxietyText(chartData.find((d) => d.skor === value)?.level || null)})`, 'Skor PASS']} />
+                <Line type="monotone" dataKey="skor" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -277,18 +256,14 @@ const PatientDetail = ({ patient }: PatientDetailProps) => {
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <h4 className="font-medium">Skrining #{screenings.length - index}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {format(parseISO(screening.created_at), "dd MMMM yyyy HH:mm", { locale: id })}
-                      </p>
+                      <p className="text-sm text-muted-foreground">{format(parseISO(screening.created_at), 'dd MMMM yyyy HH:mm', { locale: id })}</p>
                     </div>
                     <div className="text-right">
-                      <Badge variant={screening.status === "completed" ? "default" : "secondary"}>
-                        {screening.status === "completed" ? "Selesai" : "Belum Selesai"}
-                      </Badge>
+                      <Badge variant={screening.status === 'completed' ? 'default' : 'secondary'}>{screening.status === 'completed' ? 'Selesai' : 'Belum Selesai'}</Badge>
                     </div>
                   </div>
-                  
-                  {screening.status === "completed" && (
+
+                  {screening.status === 'completed' && (
                     <>
                       <Separator className="my-2" />
                       <div className="grid grid-cols-2 gap-4 text-sm">
@@ -298,18 +273,18 @@ const PatientDetail = ({ patient }: PatientDetailProps) => {
                         </div>
                         <div>
                           <p className="text-muted-foreground">Tingkat Kecemasan</p>
-                          <Badge 
+                          <Badge
                             variant="outline"
-                            style={{ 
+                            style={{
                               color: getAnxietyColor(screening.anxiety_level),
-                              borderColor: getAnxietyColor(screening.anxiety_level)
+                              borderColor: getAnxietyColor(screening.anxiety_level),
                             }}
                           >
                             {getAnxietyText(screening.anxiety_level)}
                           </Badge>
                         </div>
                       </div>
-                      
+
                       {screening.notes && (
                         <>
                           <Separator className="my-2" />
@@ -319,7 +294,7 @@ const PatientDetail = ({ patient }: PatientDetailProps) => {
                           </div>
                         </>
                       )}
-                      
+
                       <Separator className="my-2" />
                       <Button
                         variant="outline"
@@ -344,9 +319,7 @@ const PatientDetail = ({ patient }: PatientDetailProps) => {
       {selectedScreening && answers.length > 0 && (
         <Card className="shadow-soft">
           <CardHeader>
-            <CardTitle>
-              Detail Jawaban Skrining - {format(parseISO(selectedScreening.created_at), "dd MMMM yyyy", { locale: id })}
-            </CardTitle>
+            <CardTitle>Detail Jawaban Skrining - {format(parseISO(selectedScreening.created_at), 'dd MMMM yyyy', { locale: id })}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">

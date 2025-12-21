@@ -7,17 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
-import {
-  ArrowLeft, 
-  Heart, 
-  TrendingUp, 
-  BookOpen, 
-  AlertTriangle,
-  CheckCircle,
-  Info,
-  Loader2,
-  MessageSquare
-} from 'lucide-react';
+import { ArrowLeft, Heart, TrendingUp, BookOpen, AlertTriangle, CheckCircle, Info, Loader2, MessageSquare } from 'lucide-react';
 
 interface Screening {
   id: string;
@@ -63,7 +53,7 @@ export default function Results() {
       navigate('/auth');
       return;
     }
-    
+
     if (user && screeningId) {
       fetchScreeningResult();
       fetchRecommendations();
@@ -72,20 +62,15 @@ export default function Results() {
 
   const fetchScreeningResult = async () => {
     try {
-      const { data, error } = await supabase
-        .from('screenings')
-        .select('*')
-        .eq('id', screeningId)
-        .eq('user_id', user?.id)
-        .single();
+      const { data, error } = await supabase.from('screenings').select('*').eq('id', screeningId).eq('user_id', user?.id).single();
 
       if (error) throw error;
       setScreening(data);
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Gagal memuat hasil skrining",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Gagal memuat hasil skrining',
+        variant: 'destructive',
       });
       navigate('/dashboard');
     }
@@ -95,12 +80,7 @@ export default function Results() {
     try {
       if (!screening) return;
 
-      const { data, error } = await supabase
-        .from('educational_materials')
-        .select('*')
-        .eq('anxiety_level', screening.anxiety_level)
-        .eq('is_published', true)
-        .limit(3);
+      const { data, error } = await supabase.from('educational_materials').select('*').eq('anxiety_level', screening.anxiety_level).eq('is_published', true).limit(3);
 
       if (error) throw error;
       setRecommendations(data || []);
@@ -121,7 +101,7 @@ export default function Results() {
           bgColor: 'bg-green-50',
           borderColor: 'border-green-200',
           icon: CheckCircle,
-          recommendation: 'Pertahankan gaya hidup sehat dan tetap waspada terhadap perubahan suasana hati.'
+          recommendation: 'Pertahankan gaya hidup sehat dan tetap waspada terhadap perubahan suasana hati.',
         };
       case 'mild':
         return {
@@ -131,7 +111,7 @@ export default function Results() {
           bgColor: 'bg-yellow-50',
           borderColor: 'border-yellow-200',
           icon: Info,
-          recommendation: 'Coba teknik relaksasi dan pertimbangkan untuk berbicara dengan tenaga kesehatan.'
+          recommendation: 'Coba teknik relaksasi dan pertimbangkan untuk berbicara dengan tenaga kesehatan.',
         };
       case 'moderate':
         return {
@@ -141,7 +121,7 @@ export default function Results() {
           bgColor: 'bg-orange-50',
           borderColor: 'border-orange-200',
           icon: AlertTriangle,
-          recommendation: 'Disarankan untuk konsultasi dengan bidan atau tenaga kesehatan mental.'
+          recommendation: 'Disarankan untuk konsultasi dengan bidan atau tenaga kesehatan mental.',
         };
       case 'severe':
         return {
@@ -151,7 +131,7 @@ export default function Results() {
           bgColor: 'bg-red-50',
           borderColor: 'border-red-200',
           icon: AlertTriangle,
-          recommendation: 'Segera konsultasikan dengan dokter atau psikolog untuk mendapatkan penanganan yang tepat.'
+          recommendation: 'Segera konsultasikan dengan dokter atau psikolog untuk mendapatkan penanganan yang tepat.',
         };
       default:
         return {
@@ -161,7 +141,7 @@ export default function Results() {
           bgColor: 'bg-gray-50',
           borderColor: 'border-gray-200',
           icon: Info,
-          recommendation: 'Silakan hubungi tenaga kesehatan untuk konsultasi lebih lanjut.'
+          recommendation: 'Silakan hubungi tenaga kesehatan untuk konsultasi lebih lanjut.',
         };
     }
   };
@@ -213,12 +193,8 @@ export default function Results() {
             <div className="flex items-center gap-3">
               <IconComponent className={`h-8 w-8 ${resultInfo.color}`} />
               <div>
-                <CardTitle className={`text-2xl ${resultInfo.color}`}>
-                  {resultInfo.title}
-                </CardTitle>
-                <CardDescription className="text-lg text-foreground">
-                  {resultInfo.description}
-                </CardDescription>
+                <CardTitle className={`text-2xl ${resultInfo.color}`}>{resultInfo.title}</CardTitle>
+                <CardDescription className="text-lg text-foreground">{resultInfo.description}</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -226,16 +202,17 @@ export default function Results() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">Skor GAD-7</span>
+                  <span className="text-sm font-medium">Skor PASS</span>
                   <span className="text-2xl font-bold">{screening.total_score}/21</span>
                 </div>
                 <Progress value={(screening.total_score / 21) * 100} className="h-3" />
                 <p className="text-sm text-muted-foreground mt-2">
-                  Tanggal: {new Date(screening.completed_at).toLocaleDateString('id-ID', {
+                  Tanggal:{' '}
+                  {new Date(screening.completed_at).toLocaleDateString('id-ID', {
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',
-                    day: 'numeric'
+                    day: 'numeric',
                   })}
                 </p>
               </div>
@@ -257,9 +234,7 @@ export default function Results() {
                 <MessageSquare className="h-5 w-5 text-primary" />
                 Tinjauan dari Bidan
               </CardTitle>
-              <CardDescription>
-                Berikut adalah catatan dan rekomendasi dari bidan berdasarkan hasil skrining Anda.
-              </CardDescription>
+              <CardDescription>Berikut adalah catatan dan rekomendasi dari bidan berdasarkan hasil skrining Anda.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="prose prose-sm max-w-none text-foreground">
@@ -272,10 +247,8 @@ export default function Results() {
         {/* Score Interpretation */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Interpretasi Skor GAD-7</CardTitle>
-            <CardDescription>
-              Pemahaman tentang tingkat kecemasan berdasarkan skor yang Anda peroleh
-            </CardDescription>
+            <CardTitle>Interpretasi Skor PASS</CardTitle>
+            <CardDescription>Pemahaman tentang tingkat kecemasan berdasarkan skor yang Anda peroleh</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -311,26 +284,16 @@ export default function Results() {
                 <BookOpen className="h-5 w-5" />
                 Materi Edukasi yang Direkomendasikan
               </CardTitle>
-              <CardDescription>
-                Materi pembelajaran yang sesuai dengan kondisi Anda saat ini
-              </CardDescription>
+              <CardDescription>Materi pembelajaran yang sesuai dengan kondisi Anda saat ini</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {recommendations.map((material) => (
-                  <Card
-                    key={material.id}
-                    className="flex flex-col hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-                    onClick={() => navigate(`/education/${material.id}`)}
-                  >
+                  <Card key={material.id} className="flex flex-col hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => navigate(`/education/${material.id}`)}>
                     <CardHeader className="p-0">
-                      <img 
-                        src={
-                          material.material_type === 'video' 
-                            ? getYouTubeThumbnail(material.video_url) || 'https://via.placeholder.com/400x225?text=Video'
-                            : material.image_url || 'https://via.placeholder.com/400x225?text=CalMyCare'
-                        } 
-                        alt={material.title} 
+                      <img
+                        src={material.material_type === 'video' ? getYouTubeThumbnail(material.video_url) || 'https://via.placeholder.com/400x225?text=Video' : material.image_url || 'https://via.placeholder.com/400x225?text=CalMyCare'}
+                        alt={material.title}
                         className="rounded-t-lg aspect-video object-cover"
                       />
                     </CardHeader>
@@ -352,21 +315,12 @@ export default function Results() {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4">
-          <Button 
-            size="lg" 
-            onClick={() => navigate('/education')}
-            className="flex-1"
-          >
+          <Button size="lg" onClick={() => navigate('/education')} className="flex-1">
             <BookOpen className="h-4 w-4 mr-2" />
             Lihat Materi Edukasi
           </Button>
-          
-          <Button 
-            variant="outline" 
-            size="lg"
-            onClick={() => navigate('/screening')}
-            className="flex-1"
-          >
+
+          <Button variant="outline" size="lg" onClick={() => navigate('/screening')} className="flex-1">
             <TrendingUp className="h-4 w-4 mr-2" />
             Skrining Ulang
           </Button>
@@ -379,8 +333,7 @@ export default function Results() {
             <div>
               <h4 className="font-semibold text-amber-800 mb-1">Penting untuk Diingat</h4>
               <p className="text-sm text-amber-700">
-                Hasil skrining ini bukan diagnosis medis. Jika Anda merasa khawatir tentang kondisi kesehatan mental Anda, 
-                silakan konsultasikan dengan tenaga kesehatan profesional. Selalu prioritaskan kesehatan Anda dan janin.
+                Hasil skrining ini bukan diagnosis medis. Jika Anda merasa khawatir tentang kondisi kesehatan mental Anda, silakan konsultasikan dengan tenaga kesehatan profesional. Selalu prioritaskan kesehatan Anda dan janin.
               </p>
             </div>
           </div>
