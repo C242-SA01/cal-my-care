@@ -25,7 +25,7 @@ const handler: Handler = async (event: HandlerEvent) => {
 
     // 4. Initialize AI client and make a non-streaming call
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     const result = await model.generateContent(message);
     const responseText = result.response.text();
 
