@@ -1,4 +1,4 @@
-np; // src/components/ChatMessage.tsx
+// src/components/ChatMessage.tsx
 import React from 'react';
 import { Bot, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
