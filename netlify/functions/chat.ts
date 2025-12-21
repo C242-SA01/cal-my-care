@@ -40,7 +40,7 @@ const handler: Handler = async (event: HandlerEvent) => {
     const genAI = new GoogleGenerativeAI(apiKey);
 
     // KOREKSI: Gunakan model yang valid (1.5-flash)
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
 
     const result = await model.generateContent(message);
     const responseText = result.response.text();
