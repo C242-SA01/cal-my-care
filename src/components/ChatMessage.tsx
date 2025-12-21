@@ -1,4 +1,4 @@
-// src/components/ChatMessage.tsx
+np; // src/components/ChatMessage.tsx
 import React from 'react';
 import { Bot, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -16,16 +16,16 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
           <Bot className="h-6 w-6" />
         </div>
         <div className="flex items-center gap-2 pt-2">
-            <span className="h-2 w-2 rounded-full bg-pink-300 animate-bounce [animation-delay:-0.3s]"></span>
-            <span className="h-2 w-2 rounded-full bg-pink-300 animate-bounce [animation-delay:-0.15s]"></span>
-            <span className="h-2 w-2 rounded-full bg-pink-300 animate-bounce"></span>
+          <span className="h-2 w-2 rounded-full bg-pink-300 animate-bounce [animation-delay:-0.3s]"></span>
+          <span className="h-2 w-2 rounded-full bg-pink-300 animate-bounce [animation-delay:-0.15s]"></span>
+          <span className="h-2 w-2 rounded-full bg-pink-300 animate-bounce"></span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={cn("flex items-start gap-3", isUser && "justify-end")}>
+    <div className={cn('flex items-start gap-3', isUser && 'justify-end')}>
       {isBot && (
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pink-100 text-pink-600">
           <Bot className="h-6 w-6" />
@@ -33,13 +33,13 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
       )}
       <div
         className={cn(
-          "max-w-[75%] rounded-2xl px-4 py-3 text-sm break-words", // Added break-words
-          isBot ? "bg-pink-50 text-gray-800 rounded-tl-none" : "bg-rose-500 text-white rounded-br-none"
+          'max-w-[75%] rounded-2xl px-4 py-3 text-sm break-words', // Added break-words
+          isBot ? 'bg-pink-50 text-gray-800 rounded-tl-none' : 'bg-rose-500 text-white rounded-br-none'
         )}
       >
         <p>{message.content}</p>
       </div>
-       {isUser && (
+      {isUser && (
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600">
           <User className="h-6 w-6" />
         </div>

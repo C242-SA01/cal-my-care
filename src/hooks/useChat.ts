@@ -1,7 +1,7 @@
 // src/hooks/useChat.ts
 import { useState, useCallback, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { supabase } from '@/integrations/supabase/client'; // Import supabase client for fetching user ID
+import { supabase } from '@/integrations/supabase/client';
 
 export interface Message {
   id: string;
@@ -9,54 +9,39 @@ export interface Message {
   content: string;
 }
 
-export const useChat = () => { // userId is now fetched internally
+export const useChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [sessionId, setSessionId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // Fetch userId on component mount
   useEffect(() => {
     const getUserId = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserId(user.id);
-        setSessionId(uuidv4()); // Generate session ID after userId is available
+        setSessionId(uuidv4());
       } else {
-        // Handle case where user is not logged in, or redirect to login
         console.error("User not logged in, cannot start chat.");
-        // Optionally, set a guest userId or redirect
       }
     };
     getUserId();
-  }, []); // Run only once on mount
+  }, []);
 
   const sendMessage = useCallback(async (messageText: string) => {
-    if (!messageText.trim() || !userId || !sessionId) return;
+    if (!messageText.trim() || !userId) return;
 
-    const userMessage: Message = {
-      id: uuidv4(),
-      role: 'user',
-      content: messageText,
-    };
-
-    const loadingMessage: Message = {
-      id: uuidv4(),
-      role: 'loading',
-      content: '',
-    };
+    const userMessage: Message = { id: uuidv4(), role: 'user', content: messageText };
+    const loadingMessage: Message = { id: uuidv4(), role: 'loading', content: '' };
 
     setMessages((prev) => [...prev, userMessage, loadingMessage]);
     setIsLoading(true);
 
     try {
-      // Get the session token for authorization
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
 
-      if (!token) {
-        throw new Error("No session token found. User not authenticated.");
-      }
+      if (!token) throw new Error("No session token found.");
 
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -64,37 +49,26 @@ export const useChat = () => { // userId is now fetched internally
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}` 
         },
-        body: JSON.stringify({ message: messageText, userId, sessionId }),
+        // Only send the message for the simplified function
+        body: JSON.stringify({ message: messageText }),
       });
 
-      if (!response.ok || !response.body) {
-        throw new Error('Failed to get a response from the server.');
+      if (!response.ok) {
+        // Try to get more specific error from the body
+        const errorBody = await response.text();
+        console.error("Server responded with an error:", errorBody);
+        throw new Error(`Failed to get a response from the server. Status: ${response.status}`);
       }
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let botMessageContent = '';
-
-      setMessages((prev) => prev.filter(msg => msg.role !== 'loading'));
-      
+      const data = await response.json();
       const botMessage: Message = {
         id: uuidv4(),
         role: 'model',
-        content: '',
+        content: data.reply || "No reply found in response.",
       };
-      setMessages((prev) => [...prev, botMessage]);
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        botMessageContent += decoder.decode(value, { stream: true });
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === botMessage.id ? { ...msg, content: botMessageContent } : msg
-          )
-        );
-      }
+      setMessages((prev) => [...prev.filter(m => m.role !== 'loading'), botMessage]);
+
     } catch (error) {
       console.error("Chat error:", error);
       const errorMessage: Message = {
@@ -106,10 +80,10 @@ export const useChat = () => { // userId is now fetched internally
     } finally {
       setIsLoading(false);
     }
-  }, [userId, sessionId]); // Dependencies
+  }, [userId, sessionId]);
 
   const resetChat = useCallback(() => {
-    setSessionId(uuidv4()); // Generate new session ID
+    setSessionId(uuidv4());
     setMessages([]);
   }, []);
 
