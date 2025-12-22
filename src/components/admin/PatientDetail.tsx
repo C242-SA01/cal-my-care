@@ -23,7 +23,7 @@ interface PatientDetailProps {
 interface Screening {
   id: string;
   total_score: number | null;
-  anxiety_level: string | null;
+  anxiety_level: 'normal' | 'ringan' | 'sedang' | 'berat' | null;
   status: string;
   created_at: string;
   completed_at: string | null;
@@ -90,28 +90,22 @@ const PatientDetail = ({ patient }: PatientDetailProps) => {
 
   const getAnxietyText = (level: string | null) => {
     switch (level) {
-      case 'minimal':
-        return 'Minimal';
-      case 'mild':
-        return 'Ringan';
-      case 'moderate':
-        return 'Sedang';
-      case 'severe':
-        return 'Berat';
-      default:
-        return 'Belum ada';
+      case 'normal': return 'Normal';
+      case 'ringan': return 'Cemas Ringan';
+      case 'sedang': return 'Cemas Sedang';
+      case 'berat': return 'Cemas Berat';
+      default: return 'Belum ada';
     }
   };
 
   const getAnxietyColor = (level: string | null) => {
     switch (level) {
-      case 'minimal':
+      case 'normal':
+      case 'ringan':
         return 'hsl(var(--success))';
-      case 'mild':
+      case 'sedang':
         return 'hsl(var(--warning))';
-      case 'moderate':
-        return 'hsl(var(--destructive))';
-      case 'severe':
+      case 'berat':
         return 'hsl(var(--destructive))';
       default:
         return 'hsl(var(--muted-foreground))';
@@ -229,7 +223,7 @@ const PatientDetail = ({ patient }: PatientDetailProps) => {
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
-                <YAxis domain={[0, 21]} />
+                <YAxis domain={[0, 93]} />
                 <Tooltip labelFormatter={(label) => `Tanggal: ${label}`} formatter={(value: any, name: string) => [`${value} (${getAnxietyText(chartData.find((d) => d.skor === value)?.level || null)})`, 'Skor PASS']} />
                 <Line type="monotone" dataKey="skor" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }} />
               </LineChart>
@@ -269,7 +263,7 @@ const PatientDetail = ({ patient }: PatientDetailProps) => {
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <p className="text-muted-foreground">Total Skor</p>
-                          <p className="font-medium">{screening.total_score}/21</p>
+                          <p className="font-medium">{screening.total_score}/93</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Tingkat Kecemasan</p>
@@ -336,7 +330,7 @@ const PatientDetail = ({ patient }: PatientDetailProps) => {
               <Separator className="my-4" />
               <div className="bg-muted/50 p-3 rounded">
                 <p className="text-sm font-medium">
-                  Total Skor: {selectedScreening.total_score}/21 - {getAnxietyText(selectedScreening.anxiety_level)}
+                  Total Skor: {selectedScreening.total_score}/93 - {getAnxietyText(selectedScreening.anxiety_level)}
                 </p>
               </div>
             </div>

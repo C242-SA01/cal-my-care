@@ -22,7 +22,7 @@ interface ScreeningResult {
   id: string;
   completed_at: string;
   total_score: number;
-  anxiety_level: 'minimal' | 'mild' | 'moderate' | 'severe';
+  anxiety_level: 'normal' | 'ringan' | 'sedang' | 'berat';
   full_name: string | null;
   email: string | null;
   status: ScreeningStatus;
@@ -34,14 +34,14 @@ interface ScreeningDetail extends ScreeningResult {
   answer_score: number;
 }
 
-const ANXIETY_LEVELS: ScreeningResult['anxiety_level'][] = ['minimal', 'mild', 'moderate', 'severe'];
+const ANXIETY_LEVELS: ScreeningResult['anxiety_level'][] = ['normal', 'ringan', 'sedang', 'berat'];
 const STATUS_LEVELS: ScreeningStatus[] = ['in_progress', 'completed', 'reviewed'];
 
 const badgeColorMap = {
-  minimal: 'bg-green-100 text-green-800 hover:bg-green-200',
-  mild: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
-  moderate: 'bg-orange-100 text-orange-800 hover:bg-orange-200',
-  severe: 'bg-red-100 text-red-800 hover:bg-red-200',
+  normal: 'bg-green-100 text-green-800 hover:bg-green-200',
+  ringan: 'bg-green-100 text-green-800 hover:bg-green-200',
+  sedang: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
+  berat: 'bg-red-100 text-red-800 hover:bg-red-200',
 };
 
 const statusBadgeMap: { [key in ScreeningStatus]: string } = {
@@ -169,6 +169,14 @@ export default function ScreeningManagement() {
       </div>
     );
 
+  const getAnxietyLevelText = (level: string | null) => {
+    if (!level) return 'Belum Selesai';
+    if (level === 'ringan') return 'Cemas Ringan';
+    if (level === 'sedang') return 'Cemas Sedang';
+    if (level === 'berat') return 'Cemas Berat';
+    return level.charAt(0).toUpperCase() + level.slice(1); // For 'Normal'
+  };
+
   return (
     <>
       <Card>
@@ -190,7 +198,7 @@ export default function ScreeningManagement() {
                 <SelectItem value="all">Semua Level</SelectItem>
                 {ANXIETY_LEVELS.map((level) => (
                   <SelectItem key={level} value={level} className="capitalize">
-                    {level}
+                    {getAnxietyLevelText(level)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -242,7 +250,7 @@ export default function ScreeningManagement() {
                       <TableCell>{new Date(result.completed_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</TableCell>
                       <TableCell className="text-center font-semibold">{result.total_score}</TableCell>
                       <TableCell>
-                        <Badge className={`capitalize ${badgeColorMap[result.anxiety_level]}`}>{result.anxiety_level}</Badge>
+                        <Badge className={`capitalize ${badgeColorMap[result.anxiety_level]}`}>{getAnxietyLevelText(result.anxiety_level)}</Badge>
                       </TableCell>
                       <TableCell>
                         <Badge className={`capitalize ${statusBadgeMap[result.status]}`}>{result.status.replace('_', ' ')}</Badge>
@@ -277,13 +285,13 @@ export default function ScreeningManagement() {
                         <CardTitle className="text-base">{result.full_name || 'N/A'}</CardTitle>
                         <p className="text-sm text-muted-foreground">{new Date(result.completed_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                       </div>
-                      <Badge className={`capitalize ${badgeColorMap[result.anxiety_level]}`}>{result.anxiety_level}</Badge>
+                      <Badge className={`capitalize ${badgeColorMap[result.anxiety_level]}`}>{getAnxietyLevelText(result.anxiety_level)}</Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Skor</span>
-                      <span className="font-semibold">{result.total_score} / 21</span>
+                      <span className="font-semibold">{result.total_score} / 93</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Status</span>
@@ -359,9 +367,9 @@ export default function ScreeningManagement() {
               <div className="overflow-y-auto pr-4">
                 <div className="grid grid-cols-2 gap-4 text-center mb-4 sticky top-0 bg-background py-2">
                   <div>
-                    <Badge className={`text-lg ${badgeColorMap[modalData[0].anxiety_level]}`}>{modalData[0].anxiety_level}</Badge>
+                    <Badge className={`text-lg ${badgeColorMap[modalData[0].anxiety_level]}`}>{getAnxietyLevelText(modalData[0].anxiety_level)}</Badge>
                   </div>
-                  <div className="font-bold text-2xl">{modalData[0].total_score} / 21</div>
+                  <div className="font-bold text-2xl">{modalData[0].total_score} / 93</div>
                 </div>
                 <Table>
                   <TableHeader>
@@ -384,13 +392,7 @@ export default function ScreeningManagement() {
                   </TableBody>
                 </Table>
               </div>
-              <ScreeningReviewForm
-                screeningId={modalData[0].screening_id}
-                initialNotes={modalData[0].notes || ''}
-                initialStatus={modalData[0].status}
-                onSave={handleReviewSaved}
-                onCancel={handleCloseModal}
-              />
+              <ScreeningReviewForm screeningId={modalData[0].id} initialNotes={modalData[0].notes || ''} initialStatus={modalData[0].status} onSave={handleReviewSaved} onCancel={handleCloseModal} />
             </div>
           ) : (
             <div className="text-amber-600 p-8 text-center">

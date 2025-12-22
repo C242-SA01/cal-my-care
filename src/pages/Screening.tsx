@@ -204,11 +204,11 @@ export default function Screening() {
     }
   };
 
-  const calculateAnxietyLevel = (totalScore: number): 'minimal' | 'mild' | 'moderate' | 'severe' => {
-    if (totalScore >= 0 && totalScore <= 4) return 'minimal';
-    if (totalScore >= 5 && totalScore <= 9) return 'mild';
-    if (totalScore >= 10 && totalScore <= 14) return 'moderate';
-    return 'severe';
+  const calculateAnxietyLevel = (totalScore: number): 'normal' | 'ringan' | 'sedang' | 'berat' => {
+    if (totalScore >= 0 && totalScore <= 20) return 'normal';
+    if (totalScore >= 21 && totalScore <= 26) return 'ringan';
+    if (totalScore >= 27 && totalScore <= 40) return 'sedang';
+    return 'berat'; // Scores 41-93
   };
 
   const handleComplete = async () => {

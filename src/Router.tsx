@@ -120,25 +120,10 @@ const Router = () => {
           <Route element={<AuthenticatedRoute />}>
             {/* The Profile page is accessible to all authenticated users 
                 but is not part of a specific layout that might redirect away from it. */}
-            <Route path="/profile" element={<Profile />} />
-
-            {/* Admin Routes */}
-            <Route path="/admin" element={<AdminRouteGuard />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="patients" element={<PatientManagement />} />
-              <Route path="patient/:id" element={<PatientDetail />} />
-              <Route path="education" element={<EducationManagement />} />
-              <Route path="results" element={<ScreeningManagement />} />
-              <Route path="users" element={<AdminUserManagementPage />} />
-              {/* E-Modul Admin Routes */}
-              <Route path="emodules" element={<EModulAdminList />} />
-              <Route path="emodules/new" element={<EModulAdminForm />} />
-              <Route path="emodules/:id/edit" element={<EModulAdminForm />} />
-            </Route>
-
             {/* Regular User/Patient Routes */}
             <Route element={<PatientRouteGuard />}>
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="/quiz" element={<QuizList />} />
               <Route path="/quiz/:trimester" element={<Screening />} />
               <Route path="/results" element={<Results />} />

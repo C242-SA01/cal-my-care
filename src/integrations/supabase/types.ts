@@ -118,7 +118,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      anxiety_level: "minimal" | "mild" | "moderate" | "severe"
+      anxiety_level: "normal" | "ringan" | "sedang" | "berat"
       screening_status: "in_progress" | "completed" | "reviewed"
       user_role: "patient" | "midwife" | "admin"
       mood_enum: "senang" | "sedih" | "lelah" | "bersemangat" | "biasa"

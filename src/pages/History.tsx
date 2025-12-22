@@ -1,26 +1,26 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { History as HistoryIcon, Loader2, AlertTriangle, FileText, ChevronRight, MessageSquare } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { History as HistoryIcon, Loader2, AlertTriangle, FileText, ChevronRight, MessageSquare } from 'lucide-react';
 
 interface ScreeningHistory {
   id: string;
   completed_at: string;
   total_score: number;
-  anxiety_level: 'minimal' | 'mild' | 'moderate' | 'severe';
+  anxiety_level: 'normal' | 'ringan' | 'sedang' | 'berat';
   status: 'completed' | 'reviewed';
   notes: string | null;
 }
 
 const badgeColorMap: { [key: string]: string } = {
-  minimal: 'bg-green-100 text-green-800 hover:bg-green-200',
-  mild: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
-  moderate: 'bg-orange-100 text-orange-800 hover:bg-orange-200',
-  severe: 'bg-red-100 text-red-800 hover:bg-red-200',
+  normal: 'bg-green-100 text-green-800 hover:bg-green-200',
+  ringan: 'bg-green-100 text-green-800 hover:bg-green-200',
+  sedang: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
+  berat: 'bg-red-100 text-red-800 hover:bg-red-200',
 };
 
 const History = () => {
@@ -36,16 +36,16 @@ const History = () => {
       setLoading(true);
       try {
         const { data, error } = await supabase
-          .from("screenings")
-          .select("id, completed_at, total_score, anxiety_level, status, notes")
-          .eq("user_id", user.id)
-          .in("status", ["completed", "reviewed"])
-          .order("completed_at", { ascending: false });
+          .from('screenings')
+          .select('id, completed_at, total_score, anxiety_level, status, notes')
+          .eq('user_id', user.id)
+          .in('status', ['completed', 'reviewed'])
+          .order('completed_at', { ascending: false });
 
         if (error) throw error;
         setHistory(data || []);
       } catch (error) {
-        console.error("Error fetching screening history:", error);
+        console.error('Error fetching screening history:', error);
       } finally {
         setLoading(false);
       }
@@ -55,7 +55,7 @@ const History = () => {
   }, [user]);
 
   const handleViewResult = (screeningId: string) => {
-    navigate("/results", { state: { screeningId } });
+    navigate('/results', { state: { screeningId } });
   };
 
   const HistoryCardSkeleton = () => (
@@ -68,6 +68,14 @@ const History = () => {
     </div>
   );
 
+  const getAnxietyLevelText = (level: string | null) => {
+    if (!level) return 'Belum Selesai';
+    if (level === 'ringan') return 'Cemas Ringan';
+    if (level === 'sedang') return 'Cemas Sedang';
+    if (level === 'berat') return 'Cemas Berat';
+    return level.charAt(0).toUpperCase() + level.slice(1); // For 'Normal'
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -77,14 +85,16 @@ const History = () => {
 
       {loading ? (
         <div className="space-y-4">
-          {[...Array(3)].map((_, i) => <HistoryCardSkeleton key={i} />)}
+          {[...Array(3)].map((_, i) => (
+            <HistoryCardSkeleton key={i} />
+          ))}
         </div>
       ) : history.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-center py-16 border-2 border-dashed rounded-lg">
           <AlertTriangle className="h-12 w-12 text-muted-foreground mb-4" />
           <h2 className="text-xl font-semibold">Belum Ada Riwayat</h2>
           <p className="text-muted-foreground mt-2 max-w-sm">Anda belum pernah menyelesaikan skrining. Mulai skrining pertama Anda untuk melihat hasilnya di sini.</p>
-          <Button onClick={() => navigate("/screening")} className="mt-6">
+          <Button onClick={() => navigate('/screening')} className="mt-6">
             <FileText className="h-4 w-4 mr-2" />
             Mulai Skrining Sekarang
           </Button>
@@ -94,19 +104,18 @@ const History = () => {
           <CardContent className="p-0">
             <div className="divide-y">
               {history.map((item) => (
-                <div 
-                  key={item.id} 
-                  className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
-                  onClick={() => handleViewResult(item.id)}
-                >
+                <div key={item.id} className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => handleViewResult(item.id)}>
                   <div>
                     <p className="font-semibold">
-                      {new Date(item.completed_at).toLocaleDateString("id-ID", {
-                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                      {new Date(item.completed_at).toLocaleDateString('id-ID', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
                       })}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
-                      <p className="text-sm text-muted-foreground">Skor: {item.total_score} / 21</p>
+                      <p className="text-sm text-muted-foreground">Skor: {item.total_score} / 93</p>
                       {item.status === 'reviewed' && (
                         <Badge variant="secondary" className="text-xs bg-primary/10 text-primary hover:bg-primary/20">
                           <MessageSquare className="h-3 w-3 mr-1.5" />
@@ -116,9 +125,7 @@ const History = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <Badge className={`capitalize ${badgeColorMap[item.anxiety_level]}`}>
-                      {item.anxiety_level}
-                    </Badge>
+                    <Badge className={`capitalize ${badgeColorMap[item.anxiety_level]}`}>{getAnxietyLevelText(item.anxiety_level)}</Badge>
                     <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </div>
                 </div>

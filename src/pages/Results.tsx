@@ -12,7 +12,7 @@ import { ArrowLeft, Heart, TrendingUp, BookOpen, AlertTriangle, CheckCircle, Inf
 interface Screening {
   id: string;
   total_score: number;
-  anxiety_level: 'minimal' | 'mild' | 'moderate' | 'severe';
+  anxiety_level: 'normal' | 'ringan' | 'sedang' | 'berat';
   completed_at: string;
   status: 'in_progress' | 'completed' | 'reviewed';
   notes: string | null;
@@ -93,45 +93,45 @@ export default function Results() {
 
   const getResultInfo = (level: string, score: number) => {
     switch (level) {
-      case 'minimal':
+      case 'normal':
         return {
-          title: 'Kecemasan Minimal',
-          description: 'Tingkat kecemasan Anda tergolong minimal. Ini adalah hasil yang baik!',
+          title: 'Normal',
+          description: 'Tingkat kecemasan Anda tergolong normal. Ini adalah hasil yang sangat baik!',
           color: 'text-green-600',
           bgColor: 'bg-green-50',
           borderColor: 'border-green-200',
           icon: CheckCircle,
-          recommendation: 'Pertahankan gaya hidup sehat dan tetap waspada terhadap perubahan suasana hati.',
+          recommendation: 'Pertahankan gaya hidup sehat, kelola stres dengan baik, dan terus pantau perubahan suasana hati Anda.',
         };
-      case 'mild':
+      case 'ringan':
         return {
-          title: 'Kecemasan Ringan',
-          description: 'Anda mengalami tingkat kecemasan yang ringan. Beberapa strategi sederhana dapat membantu.',
+          title: 'Cemas Ringan',
+          description: 'Anda teridentifikasi mengalami kecemasan tingkat ringan.',
+          color: 'text-green-600',
+          bgColor: 'bg-green-50',
+          borderColor: 'border-green-200',
+          icon: CheckCircle,
+          recommendation: 'Coba teknik relaksasi, mindfulness, dan pastikan Anda mendapatkan istirahat yang cukup.',
+        };
+      case 'sedang':
+        return {
+          title: 'Cemas Sedang',
+          description: 'Tingkat kecemasan Anda berada di level sedang. Penting untuk mencari dukungan.',
           color: 'text-yellow-600',
           bgColor: 'bg-yellow-50',
           borderColor: 'border-yellow-200',
-          icon: Info,
-          recommendation: 'Coba teknik relaksasi dan pertimbangkan untuk berbicara dengan tenaga kesehatan.',
-        };
-      case 'moderate':
-        return {
-          title: 'Kecemasan Sedang',
-          description: 'Tingkat kecemasan Anda sedang dan memerlukan perhatian lebih lanjut.',
-          color: 'text-orange-600',
-          bgColor: 'bg-orange-50',
-          borderColor: 'border-orange-200',
           icon: AlertTriangle,
-          recommendation: 'Disarankan untuk konsultasi dengan bidan atau tenaga kesehatan mental.',
+          recommendation: 'Sangat disarankan untuk berbagi perasaan Anda dengan pasangan, teman, atau anggota keluarga. Pertimbangkan untuk berkonsultasi dengan bidan atau konselor.',
         };
-      case 'severe':
+      case 'berat':
         return {
-          title: 'Kecemasan Berat',
-          description: 'Tingkat kecemasan Anda tergolong berat dan memerlukan bantuan profesional segera.',
+          title: 'Cemas Berat',
+          description: 'Anda menunjukkan tanda-tanda kecemasan berat. Mencari bantuan profesional adalah prioritas.',
           color: 'text-red-600',
           bgColor: 'bg-red-50',
           borderColor: 'border-red-200',
           icon: AlertTriangle,
-          recommendation: 'Segera konsultasikan dengan dokter atau psikolog untuk mendapatkan penanganan yang tepat.',
+          recommendation: 'Segera konsultasikan dengan dokter, psikolog, atau psikiater untuk mendapatkan evaluasi dan penanganan yang tepat.',
         };
       default:
         return {
@@ -203,9 +203,9 @@ export default function Results() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium">Skor PASS</span>
-                  <span className="text-2xl font-bold">{screening.total_score}/21</span>
+                  <span className="text-2xl font-bold">{screening.total_score}/93</span>
                 </div>
-                <Progress value={(screening.total_score / 21) * 100} className="h-3" />
+                <Progress value={(screening.total_score / 93) * 100} className="h-3" />
                 <p className="text-sm text-muted-foreground mt-2">
                   Tanggal:{' '}
                   {new Date(screening.completed_at).toLocaleDateString('id-ID', {
@@ -248,29 +248,29 @@ export default function Results() {
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Interpretasi Skor PASS</CardTitle>
-            <CardDescription>Pemahaman tentang tingkat kecemasan berdasarkan skor yang Anda peroleh</CardDescription>
+            <CardDescription>Pemahaman tentang tingkat kecemasan berdasarkan skor yang Anda peroleh.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="p-4 rounded-lg bg-green-50 border border-green-200">
-                <h4 className="font-semibold text-green-800">Minimal</h4>
-                <p className="text-sm text-green-700">0-4 poin</p>
-                <p className="text-xs text-green-600 mt-1">Kecemasan rendah</p>
+                <h4 className="font-semibold text-green-800">Normal</h4>
+                <p className="text-sm text-green-700">0-20 poin</p>
+                <p className="text-xs text-green-600 mt-1">Kondisi optimal</p>
+              </div>
+              <div className="p-4 rounded-lg bg-green-50 border border-green-200">
+                <h4 className="font-semibold text-green-800">Cemas Ringan</h4>
+                <p className="text-sm text-green-700">21-26 poin</p>
+                <p className="text-xs text-green-600 mt-1">Tingkat kecemasan rendah</p>
               </div>
               <div className="p-4 rounded-lg bg-yellow-50 border border-yellow-200">
-                <h4 className="font-semibold text-yellow-800">Ringan</h4>
-                <p className="text-sm text-yellow-700">5-9 poin</p>
-                <p className="text-xs text-yellow-600 mt-1">Perlu perhatian</p>
-              </div>
-              <div className="p-4 rounded-lg bg-orange-50 border border-orange-200">
-                <h4 className="font-semibold text-orange-800">Sedang</h4>
-                <p className="text-sm text-orange-700">10-14 poin</p>
-                <p className="text-xs text-orange-600 mt-1">Butuh konsultasi</p>
+                <h4 className="font-semibold text-yellow-800">Cemas Sedang</h4>
+                <p className="text-sm text-yellow-700">27-40 poin</p>
+                <p className="text-xs text-yellow-600 mt-1">Perlu perhatian dan pengelolaan</p>
               </div>
               <div className="p-4 rounded-lg bg-red-50 border border-red-200">
-                <h4 className="font-semibold text-red-800">Berat</h4>
-                <p className="text-sm text-red-700">15-21 poin</p>
-                <p className="text-xs text-red-600 mt-1">Perlu bantuan segera</p>
+                <h4 className="font-semibold text-red-800">Cemas Berat</h4>
+                <p className="text-sm text-red-700">41-93 poin</p>
+                <p className="text-xs text-red-600 mt-1">Sangat disarankan untuk konsultasi profesional</p>
               </div>
             </div>
           </CardContent>

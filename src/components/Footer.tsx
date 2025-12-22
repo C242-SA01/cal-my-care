@@ -1,4 +1,4 @@
-import { Heart, Mail, Phone, MapPin, Facebook, Twitter, Instagram } from 'lucide-react';
+import { Heart, AlertTriangle, Facebook, Twitter, Instagram } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -99,32 +99,28 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact */}
+          {/* Important Warning */}
           <div className="space-y-4">
-            <h4 className="font-semibold text-foreground">Kontak</h4>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <Mail className="h-4 w-4 text-primary" />
-                <span className="text-sm text-muted-foreground">support@calmycare.com</span>
+            <h4 className="font-semibold text-foreground">Peringatan Penting</h4>
+            <div className="space-y-3 text-sm text-muted-foreground">
+              <div className="flex items-start space-x-3">
+                <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+                <span>
+                  Informasi di platform ini adalah untuk tujuan skrining dan edukasi, bukan pengganti nasihat, diagnosis, atau perawatan medis profesional.
+                </span>
               </div>
-              <div className="flex items-center space-x-3">
-                <Phone className="h-4 w-4 text-primary" />
-                <span className="text-sm text-muted-foreground">+62 (123) 456-789</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <MapPin className="h-4 w-4 text-primary" />
-                <span className="text-sm text-muted-foreground">
-                  Pusat Kesehatan
-                  <br />
-                  Jl. Sehat 123
+              <div className="flex items-start space-x-3">
+                <Heart className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <span>
+                  Selalu konsultasikan dengan dokter atau penyedia layanan kesehatan Anda yang terkualifikasi untuk pertanyaan apa pun yang mungkin Anda miliki mengenai kondisi medis.
                 </span>
               </div>
             </div>
-            <div className="p-4 rounded-lg bg-accent border border-maternal/20">
+            <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
               <p className="text-xs text-muted-foreground">
-                <strong className="text-maternal">Dukungan Krisis 24/7:</strong>
+                <strong className="text-destructive">Dukungan Krisis 24/7:</strong>
                 <br />
-                Jika Anda mengalami keadaan darurat kesehatan mental, harap segera hubungi layanan darurat setempat.
+                Jika Anda mengalami keadaan darurat kesehatan mental, harap segera hubungi layanan darurat setempat atau profesional kesehatan mental.
               </p>
             </div>
           </div>

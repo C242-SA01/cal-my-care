@@ -15,6 +15,7 @@ import { markFirstLoginAsCompleted } from '@/lib/user';
 import { useFormPersistence } from '@/hooks/useFormPersistence';
 import { Loader2, User as UserIcon, Edit, KeyRound, Info, AlertTriangle } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const inputClasses = 'rounded-2xl border-pink-100 bg-white/80 focus-visible:ring-2 focus-visible:ring-pink-300 focus-visible:ring-offset-0';
 const selectTriggerClasses = 'rounded-2xl border-pink-100 bg-white/80 focus-visible:ring-2 focus-visible:ring-pink-300 focus-visible:ring-offset-0';
@@ -39,7 +40,6 @@ const Profile = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(isFirstLogin);
   
-  // Form state managed by the persistence hook
   const [formState, setFormState, clearFormState] = useFormPersistence<ProfileFormState>(
     `profile-form-draft-${user?.id || 'guest'}`,
     {
@@ -53,19 +53,16 @@ const Profile = () => {
     }
   );
 
-  // Password change state
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Account recovery state
   const [isRecoveryLoading, setIsRecoveryLoading] = useState(false);
 
   const isHealthStaff = userProfile?.role === 'admin' || userProfile?.role === 'midwife';
 
   useEffect(() => {
-    // Pre-fill form when dialog opens OR on first load if it's the first login
     if (userProfile && (isDialogOpen || isFirstLogin)) {
       setFormState({
         fullName: userProfile.full_name || '',
@@ -78,13 +75,6 @@ const Profile = () => {
       });
     }
   }, [userProfile, isDialogOpen, isFirstLogin, setFormState]);
-
-  // Automatically redirect to dashboard if profile is already complete for patients
-  useEffect(() => {
-    if (!isProfileLoading && isProfileComplete && !isHealthStaff) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [isProfileComplete, isProfileLoading, isHealthStaff, navigate]);
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U';
@@ -100,7 +90,6 @@ const Profile = () => {
     e.preventDefault();
     if (!user) return;
 
-    // Simple validation check
     if (!isHealthStaff && (!formState.fullName || !formState.phone || !formState.age || !formState.gestationalAgeWeeks || !formState.trimester || !formState.education || !formState.occupation)) {
       toast({
         title: 'Data Belum Lengkap',
@@ -128,10 +117,9 @@ const Profile = () => {
 
       if (error) throw error;
       
-      clearFormState(); // Clear the draft from session storage
+      clearFormState();
       await refreshUserProfile();
 
-      // If it was the first login, mark it as completed and redirect
       if (isFirstLogin) {
         await markFirstLoginAsCompleted();
         toast({
@@ -221,7 +209,6 @@ const Profile = () => {
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-gradient-to-b from-pink-50 via-rose-50/60 to-amber-50/40 px-4 py-6 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-6">
-        {/* First Login Alert */}
         {isFirstLogin && (
           <Alert className="bg-amber-100/60 border-amber-300 text-amber-800 rounded-2xl">
             <Info className="h-4 w-4 !text-amber-800" />
@@ -231,7 +218,6 @@ const Profile = () => {
           </Alert>
         )}
 
-        {/* Incomplete Profile Warning & Guide */}
         {!isHealthStaff && !isProfileComplete && !isFirstLogin && (
           <Card className="bg-red-100/60 border-red-300 rounded-2xl">
             <CardHeader className="pb-4">
@@ -262,7 +248,6 @@ const Profile = () => {
           </Card>
         )}
 
-        {/* Page header */}
         <div className="flex items-center gap-3">
           <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-pink-100 text-pink-600">
             <UserIcon className="h-5 w-5" />
@@ -273,7 +258,6 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Profile header card */}
         <Card className="relative overflow-hidden rounded-3xl border-0 bg-gradient-to-r from-pink-100 via-rose-100 to-amber-50 shadow-md">
           <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/30" />
           <CardHeader className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -289,7 +273,6 @@ const Profile = () => {
               </div>
             </div>
 
-            {/* Edit dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="mt-2 w-full rounded-2xl bg-pink-500 text-white hover:bg-pink-600 sm:mt-0 sm:w-auto">
@@ -297,8 +280,8 @@ const Profile = () => {
                   Edit Profil
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[720px] rounded-3xl bg-white p-6 sm:p-8">
-                <DialogHeader className="space-y-1">
+              <DialogContent className="sm:max-w-[720px] rounded-3xl bg-white p-0">
+                <DialogHeader className="p-6 pb-4 sm:p-8 sm:pb-6">
                   <DialogTitle className="text-lg font-semibold text-slate-800">
                     {isFirstLogin ? 'Lengkapi Profil Anda' : 'Edit Profil'}
                   </DialogTitle>
@@ -310,142 +293,138 @@ const Profile = () => {
                   </p>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-                  {/* Data Pribadi */}
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-semibold text-pink-700">Data Pribadi</h3>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="space-y-2 sm:col-span-2">
-                        <Label htmlFor="fullName">Nama Lengkap</Label>
-                        <Input id="fullName" className={inputClasses} value={formState.fullName} onChange={(e) => setFormState({ ...formState, fullName: e.target.value })} />
-                      </div>
-                      <div className="space-y-2 sm:col-span-2">
-                        <Label>Email</Label>
-                        <div className="h-10 rounded-2xl border border-pink-100 bg-slate-50 px-3 text-sm flex items-center text-slate-500">{userProfile?.email || '-'}</div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="phone">Nomor Telepon</Label>
-                        <Input id="phone" className={inputClasses} value={formState.phone} onChange={(e) => setFormState({ ...formState, phone: e.target.value })} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="age">Usia</Label>
-                        <Input id="age" type="number" className={inputClasses} value={formState.age} onChange={(e) => setFormState({ ...formState, age: e.target.value })} />
-                      </div>
-                    </div>
-                    {/* Change Password Dialog Trigger */}
-                    {!isFirstLogin && (
-                      <div className="flex justify-end">
-                        <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
-                          <DialogTrigger asChild>
-                            <Button type="button" variant="outline" className="rounded-2xl border-pink-200 bg-white text-pink-700 hover:bg-pink-50 hover:text-pink-800">
-                              Ubah Password
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-md rounded-3xl bg-white p-6 sm:p-8">
-                            <DialogHeader>
-                              <DialogTitle>Ubah Password</DialogTitle>
-                              <CardDescription>Masukkan password baru Anda.</CardDescription>
-                            </DialogHeader>
-                            <form onSubmit={handlePasswordUpdate} className="space-y-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="newPassword">Password Baru</Label>
-                                <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={inputClasses} />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="confirmPassword">Konfirmasi Password Baru</Label>
-                                <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputClasses} />
-                              </div>
-                              <DialogFooter>
-                                <DialogClose asChild>
-                                  <Button type="button" variant="ghost" className="rounded-2xl">Batal</Button>
-                                </DialogClose>
-                                <Button type="submit" disabled={isUpdatingPassword} className="rounded-2xl bg-pink-500 text-white hover:bg-pink-600">
-                                  {isUpdatingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                  Simpan Password Baru
-                                </Button>
-                              </DialogFooter>
-                            </form>
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Data Kehamilan – hidden untuk admin & bidan */}
-                  {!isHealthStaff && (
+                <ScrollArea className="h-[65vh] sm:h-auto sm:max-h-[65vh]">
+                  <form id="profile-form" onSubmit={handleSubmit} className="space-y-6 px-6 sm:px-8">
                     <div className="space-y-4">
-                      <h3 className="text-sm font-semibold text-pink-700">Data Kehamilan</h3>
+                      <h3 className="text-sm font-semibold text-pink-700">Data Pribadi</h3>
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label htmlFor="gestationalAgeWeeks">Usia Kehamilan (minggu)</Label>
-                          <Input id="gestationalAgeWeeks" type="number" className={inputClasses} value={formState.gestationalAgeWeeks} onChange={(e) => setFormState({ ...formState, gestationalAgeWeeks: e.target.value })} />
+                        <div className="space-y-2 sm:col-span-2">
+                          <Label htmlFor="fullName">Nama Lengkap</Label>
+                          <Input id="fullName" className={inputClasses} value={formState.fullName} onChange={(e) => setFormState({ ...formState, fullName: e.target.value })} />
+                        </div>
+                        <div className="space-y-2 sm:col-span-2">
+                          <Label>Email</Label>
+                          <div className="h-10 rounded-2xl border border-pink-100 bg-slate-50 px-3 text-sm flex items-center text-slate-500">{userProfile?.email || '-'}</div>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="trimester">Trimester</Label>
-                          <Select value={formState.trimester} onValueChange={(value) => setFormState({ ...formState, trimester: value })}>
-                            <SelectTrigger id="trimester" className={selectTriggerClasses}>
-                              <SelectValue placeholder="Pilih Trimester" />
+                          <Label htmlFor="phone">Nomor Telepon</Label>
+                          <Input id="phone" className={inputClasses} value={formState.phone} onChange={(e) => setFormState({ ...formState, phone: e.target.value })} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="age">Usia</Label>
+                          <Input id="age" type="number" className={inputClasses} value={formState.age} onChange={(e) => setFormState({ ...formState, age: e.target.value })} />
+                        </div>
+                      </div>
+                      {!isFirstLogin && (
+                        <div className="flex justify-end">
+                          <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+                            <DialogTrigger asChild>
+                              <Button type="button" variant="outline" className="rounded-2xl border-pink-200 bg-white text-pink-700 hover:bg-pink-50 hover:text-pink-800">
+                                Ubah Password
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-md rounded-3xl bg-white p-6 sm:p-8">
+                              <DialogHeader>
+                                <DialogTitle>Ubah Password</DialogTitle>
+                                <CardDescription>Masukkan password baru Anda.</CardDescription>
+                              </DialogHeader>
+                              <form onSubmit={handlePasswordUpdate} className="space-y-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="newPassword">Password Baru</Label>
+                                  <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={inputClasses} />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="confirmPassword">Konfirmasi Password Baru</Label>
+                                  <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputClasses} />
+                                </div>
+                                <DialogFooter>
+                                  <DialogClose asChild>
+                                    <Button type="button" variant="ghost" className="rounded-2xl">Batal</Button>
+                                  </DialogClose>
+                                  <Button type="submit" disabled={isUpdatingPassword} className="rounded-2xl bg-pink-500 text-white hover:bg-pink-600">
+                                    {isUpdatingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Simpan Password Baru
+                                  </Button>
+                                </DialogFooter>
+                              </form>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      )}
+                    </div>
+
+                    {!isHealthStaff && (
+                      <div className="space-y-4">
+                        <h3 className="text-sm font-semibold text-pink-700">Data Kehamilan</h3>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                          <div className="space-y-2">
+                            <Label htmlFor="gestationalAgeWeeks">Usia Kehamilan (minggu)</Label>
+                            <Input id="gestationalAgeWeeks" type="number" className={inputClasses} value={formState.gestationalAgeWeeks} onChange={(e) => setFormState({ ...formState, gestationalAgeWeeks: e.target.value })} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="trimester">Trimester</Label>
+                            <Select value={formState.trimester} onValueChange={(value) => setFormState({ ...formState, trimester: value })}>
+                              <SelectTrigger id="trimester" className={selectTriggerClasses}>
+                                <SelectValue placeholder="Pilih Trimester" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="I">Trimester 1</SelectItem>
+                                <SelectItem value="II">Trimester 2</SelectItem>
+                                <SelectItem value="III">Trimester 3</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-4 pb-6">
+                      <h3 className="text-sm font-semibold text-pink-700">Data Demografi</h3>
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="education">Pendidikan</Label>
+                          <Select value={formState.education} onValueChange={(value) => setFormState({ ...formState, education: value })}>
+                            <SelectTrigger id="education" className={selectTriggerClasses}>
+                              <SelectValue placeholder="Pilih Pendidikan" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="I">Trimester 1</SelectItem>
-                              <SelectItem value="II">Trimester 2</SelectItem>
-                              <SelectItem value="III">Trimester 3</SelectItem>
+                              {['SD', 'SMP', 'SMA', 'D3', 'S1', 'S2', 'Lainnya'].map((edu) => (
+                                <SelectItem key={edu} value={edu}>
+                                  {edu}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="occupation">Pekerjaan</Label>
+                          <Input id="occupation" className={inputClasses} value={formState.occupation} onChange={(e) => setFormState({ ...formState, occupation: e.target.value })} />
+                        </div>
                       </div>
                     </div>
+                  </form>
+                </ScrollArea>
+                
+                <DialogFooter className="p-6 pt-0 sm:p-8 sm:pt-0">
+                  {!isFirstLogin && (
+                    <DialogClose asChild>
+                      <Button type="button" variant="ghost" className="rounded-2xl">
+                        Batal
+                      </Button>
+                    </DialogClose>
                   )}
-
-                  {/* Data Demografi */}
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-semibold text-pink-700">Data Demografi</h3>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="education">Pendidikan</Label>
-                        <Select value={formState.education} onValueChange={(value) => setFormState({ ...formState, education: value })}>
-                          <SelectTrigger id="education" className={selectTriggerClasses}>
-                            <SelectValue placeholder="Pilih Pendidikan" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {['SD', 'SMP', 'SMA', 'D3', 'S1', 'S2', 'Lainnya'].map((edu) => (
-                              <SelectItem key={edu} value={edu}>
-                                {edu}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="occupation">Pekerjaan</Label>
-                        <Input id="occupation" className={inputClasses} value={formState.occupation} onChange={(e) => setFormState({ ...formState, occupation: e.target.value })} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <DialogFooter className="mt-4 flex items-center justify-end gap-2">
-                    {!isFirstLogin && (
-                      <DialogClose asChild>
-                        <Button type="button" variant="ghost" className="rounded-2xl">
-                          Batal
-                        </Button>
-                      </DialogClose>
-                    )}
-                    <Button type="submit" disabled={isSubmitting} className="rounded-2xl bg-pink-500 text-white hover:bg-pink-600">
-                      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      {isFirstLogin ? 'Simpan dan Lanjutkan' : 'Simpan Perubahan'}
-                    </Button>
-                  </DialogFooter>
-                </form>
+                  <Button type="submit" form="profile-form" disabled={isSubmitting} className="rounded-2xl bg-pink-500 text-white hover:bg-pink-600">
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isFirstLogin ? 'Simpan dan Lanjutkan' : 'Simpan Perubahan'}
+                  </Button>
+                </DialogFooter>
               </DialogContent>
             </Dialog>
           </CardHeader>
         </Card>
 
-        {/* Main profile details card */}
         <Card className="rounded-3xl border-0 bg-white/80 shadow-lg backdrop-blur-sm">
           <CardContent className="p-5 sm:p-6 space-y-6">
-            {/* Data Pribadi */}
             <section className="space-y-3">
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-sm font-semibold text-slate-800">Data Pribadi</h2>
@@ -470,7 +449,6 @@ const Profile = () => {
               </div>
             </section>
 
-            {/* Data Kehamilan – hidden untuk admin & bidan */}
             {!isHealthStaff && (
               <section className="space-y-3">
                 <h2 className="text-sm font-semibold text-slate-800">Data Kehamilan</h2>
@@ -487,7 +465,6 @@ const Profile = () => {
               </section>
             )}
 
-            {/* Data Demografi */}
             <section className="space-y-3">
               <h2 className="text-sm font-semibold text-slate-800">Data Demografi</h2>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 text-sm">
@@ -504,7 +481,6 @@ const Profile = () => {
           </CardContent>
         </Card>
         
-        {/* Security Settings Card */}
         <Card className="rounded-3xl border-0 bg-white/80 shadow-lg backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-slate-800">Keamanan & Pemulihan Akun</CardTitle>

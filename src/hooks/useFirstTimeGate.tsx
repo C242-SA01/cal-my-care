@@ -23,7 +23,7 @@ export const useFirstTimeGate = () => {
 
     // If it's the first login for a patient and they are not on the screening page,
     // redirect them.
-    if (isPatient && isFirstLogin && location.pathname !== '/screening') {
+    if (isPatient && isFirstLogin && location.pathname !== '/screening' && location.pathname !== '/profile') {
       navigate('/screening', { replace: true });
     }
   }, [userProfile, isProfileLoading, navigate, location.pathname]);

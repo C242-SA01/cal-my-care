@@ -25,7 +25,7 @@ interface Stats {
   totalPatients: number;
   totalScreenings: number;
   anxietyDistribution: {
-    minimal: number; mild: number; moderate: number; severe: number;
+    normal: number; ringan: number; sedang: number; berat: number;
   };
   recentTrends: Array<{ month: string; count: number; }>;
 }
@@ -42,10 +42,10 @@ interface RecentActivity {
 }
 
 const ANXIETY_COLORS = {
-  minimal: "#10B981",
-  mild: "#F59E0B",
-  moderate: "#F97316",
-  severe: "#EF4444",
+  normal: "#10B981", // Green
+  ringan: "#10B981", // Green
+  sedang: "#F59E0B", // Yellow
+  berat: "#EF4444",   // Red
 };
 
 // --- MAIN COMPONENT ---
@@ -69,7 +69,7 @@ const AdminStats = () => {
 
       // --- ANXIETY DISTRIBUTION ---
       const { data: anxietyData } = await supabase.from("screenings").select("anxiety_level").eq("status", "completed").not("anxiety_level", "is", null);
-      const anxietyDistribution = { minimal: 0, mild: 0, moderate: 0, severe: 0 };
+      const anxietyDistribution = { normal: 0, ringan: 0, sedang: 0, berat: 0 };
       anxietyData?.forEach(item => {
         if (item.anxiety_level in anxietyDistribution) {
           anxietyDistribution[item.anxiety_level as keyof typeof anxietyDistribution]++;
@@ -90,7 +90,7 @@ const AdminStats = () => {
       const recentTrends = Array.from(trendsMap.entries()).map(([month, count]) => ({ month, count: count as number }));
 
       // --- HIGH-RISK PATIENTS (NEEDS REVIEW) ---
-      const { data: highRiskScreenings, error: screeningsError } = await supabase.from('screenings').select('user_id').in('anxiety_level', ['moderate', 'severe']).eq('status', 'completed');
+      const { data: highRiskScreenings, error: screeningsError } = await supabase.from('screenings').select('user_id').in('anxiety_level', ['sedang', 'berat']).eq('status', 'completed');
       if (screeningsError) throw screeningsError;
       const uniqueHighRiskIds = [...new Set(highRiskScreenings.map(s => s.user_id))];
       setTotalHighRiskCount(uniqueHighRiskIds.length);
@@ -141,10 +141,10 @@ const AdminStats = () => {
   if (!stats) return null;
 
   const pieData = [
-    { name: "Minimal", value: stats.anxietyDistribution.minimal, fill: ANXIETY_COLORS.minimal },
-    { name: "Ringan", value: stats.anxietyDistribution.mild, fill: ANXIETY_COLORS.mild },
-    { name: "Sedang", value: stats.anxietyDistribution.moderate, fill: ANXIETY_COLORS.moderate },
-    { name: "Berat", value: stats.anxietyDistribution.severe, fill: ANXIETY_COLORS.severe },
+    { name: "Normal", value: stats.anxietyDistribution.normal, fill: ANXIETY_COLORS.normal },
+    { name: "Cemas Ringan", value: stats.anxietyDistribution.ringan, fill: ANXIETY_COLORS.ringan },
+    { name: "Cemas Sedang", value: stats.anxietyDistribution.sedang, fill: ANXIETY_COLORS.sedang },
+    { name: "Cemas Berat", value: stats.anxietyDistribution.berat, fill: ANXIETY_COLORS.berat },
   ];
 
   const highRiskPercentage = stats.totalPatients > 0 ? (totalHighRiskCount / stats.totalPatients) * 100 : 0;

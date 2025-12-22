@@ -12,9 +12,10 @@ interface Screening {
   id: string;
   status: 'in_progress' | 'completed' | 'reviewed';
   total_score: number | null;
-  anxiety_level: 'minimal' | 'mild' | 'moderate' | 'severe' | null;
+  anxiety_level: 'normal' | 'ringan' | 'sedang' | 'berat' | null;
   started_at: string;
   completed_at: string | null;
+  trimester: number;
 }
 
 export default function Dashboard() {
@@ -32,7 +33,7 @@ export default function Dashboard() {
   const fetchScreenings = async () => {
     try {
       setIsScreeningLoading(true);
-      const { data, error } = await supabase.from('screenings').select('id, status, total_score, anxiety_level, started_at, completed_at').eq('user_id', user?.id).order('started_at', { ascending: false });
+            const { data, error } = await supabase.from('screenings').select('id, status, total_score, anxiety_level, started_at, completed_at, trimester').eq('user_id', user?.id).order('started_at', { ascending: false });
 
       if (error) throw error;
       setScreenings(data || []);
@@ -45,13 +46,12 @@ export default function Dashboard() {
 
   const getAnxietyLevelVariant = (level: string | null): BadgeProps['variant'] => {
     switch (level) {
-      case 'minimal':
+      case 'normal':
+      case 'ringan':
         return 'success';
-      case 'mild':
+      case 'sedang':
         return 'warning';
-      case 'moderate':
-        return 'destructive';
-      case 'severe':
+      case 'berat':
         return 'destructive';
       default:
         return 'secondary';
@@ -60,13 +60,12 @@ export default function Dashboard() {
 
   const getAnxietyLevelTextColor = (level: string | null): string => {
     switch (level) {
-      case 'minimal':
+      case 'normal':
+      case 'ringan':
         return 'text-success-foreground';
-      case 'mild':
+      case 'sedang':
         return 'text-warning-foreground';
-      case 'moderate':
-        return 'text-destructive-foreground';
-      case 'severe':
+      case 'berat':
         return 'text-destructive-foreground';
       default:
         return 'text-secondary-foreground';
@@ -75,7 +74,10 @@ export default function Dashboard() {
 
   const getAnxietyLevelText = (level: string | null) => {
     if (!level) return 'Belum Selesai';
-    return level.charAt(0).toUpperCase() + level.slice(1);
+    if (level === 'ringan') return 'Cemas Ringan';
+    if (level === 'sedang') return 'Cemas Sedang';
+    if (level === 'berat') return 'Cemas Berat';
+    return level.charAt(0).toUpperCase() + level.slice(1); // For 'Normal'
   };
 
   const isLoading = isProfileLoading || isScreeningLoading;
@@ -108,14 +110,14 @@ export default function Dashboard() {
               <CardTitle className="text-secondary-foreground">Skrining Belum Selesai</CardTitle>
               <CardDescription className="text-muted-foreground">Anda memiliki 1 sesi skrining yang belum diselesaikan.</CardDescription>
             </div>
-            <Button onClick={() => navigate('/screening')}>Lanjutkan Skrining</Button>
+            <Button onClick={() => navigate(`/quiz/${inProgressScreening.trimester}`)}>Lanjutkan Skrining</Button>
           </CardHeader>
         </Card>
       )}
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer flex flex-col" onClick={() => navigate('/screening')}>
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer flex flex-col" onClick={() => navigate('/quiz')}>
           <CardHeader>
             <CardTitle>Skrining Baru</CardTitle>
           </CardHeader>
@@ -176,10 +178,10 @@ export default function Dashboard() {
               {latestScreening.total_score !== null && latestScreening.anxiety_level && (
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm font-medium">
-                    <span>Skor: {latestScreening.total_score}/21</span>
+                    <span>Skor: {latestScreening.total_score}/93</span>
                     <span className={`font-semibold ${getAnxietyLevelTextColor(latestScreening.anxiety_level)}`}>{getAnxietyLevelText(latestScreening.anxiety_level)}</span>
                   </div>
-                  <Progress value={(latestScreening.total_score / 21) * 100} className="h-2" />
+                  <Progress value={(latestScreening.total_score / 93) * 100} className="h-2" />
                 </div>
               )}
             </CardContent>
@@ -193,7 +195,7 @@ export default function Dashboard() {
           <CardContent className="p-8 text-center">
             <h3 className="text-xl font-semibold mb-2">Mulai Perjalanan Kesehatan Mental Anda</h3>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">Lakukan skrining PASS untuk mengetahui tingkat kecemasan Anda dan mendapatkan rekomendasi yang tepat.</p>
-            <Button size="lg" onClick={() => navigate('/screening')}>
+            <Button size="lg" onClick={() => navigate('/quiz')}>
               Mulai Skrining PASS
             </Button>
           </CardContent>

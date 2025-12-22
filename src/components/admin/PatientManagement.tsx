@@ -79,14 +79,13 @@ const PatientManagement = () => {
     }
   };
 
-  const getAnxietyBadgeVariant = (level: string | null) => {
+  const getAnxietyBadgeVariant = (level: string | null): 'default' | 'secondary' | 'destructive' | 'outline' => {
     switch (level) {
-      case 'minimal':
-        return 'default';
+      case 'normal':
       case 'ringan':
-        return 'secondary';
+        return 'default'; // Or any other 'good' variant
       case 'sedang':
-        return 'destructive';
+        return 'secondary';
       case 'berat':
         return 'destructive';
       default:
@@ -96,14 +95,14 @@ const PatientManagement = () => {
 
   const getAnxietyText = (level: string | null) => {
     switch (level) {
-      case 'minimal':
-        return 'Minimal';
-      case 'mild':
-        return 'Ringan';
-      case 'moderate':
-        return 'Sedang';
-      case 'severe':
-        return 'Berat';
+      case 'normal':
+        return 'Normal';
+      case 'ringan':
+        return 'Cemas Ringan';
+      case 'sedang':
+        return 'Cemas Sedang';
+      case 'berat':
+        return 'Cemas Berat';
       default:
         return 'Belum ada';
     }
