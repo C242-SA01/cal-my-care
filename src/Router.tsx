@@ -1,151 +1,146 @@
 import { Route, Routes, Navigate, Outlet, BrowserRouter, useLocation } from 'react-router-dom';
-import Index from './pages/Index';
-import Auth from './pages/Auth';
-import Dashboard from './pages/Dashboard';
-import Screening from './pages/Screening';
-import Results from './pages/Results';
-import AuthConfirm from './pages/AuthConfirm';
-import UpdatePassword from './pages/UpdatePassword';
 import { useAuth } from './hooks/useAuth';
-import NotFound from './pages/NotFound';
-import { Loader2 } from 'lucide-react';
+import { useOnboardingStatus } from './hooks/useOnboardingStatus';
+import SplashScreen from './components/SplashScreen';
 
 // Layouts
 import AdminLayout from './layouts/AdminLayout';
 import PatientLayout from './layouts/PatientLayout';
 
-// Admin Pages
-import AdminDashboard from './pages/AdminDashboard';
-import PatientManagement from './components/admin/PatientManagement';
-import PatientDetail from './components/admin/PatientDetail';
-import EducationManagement from './components/admin/EducationManagement';
-import ScreeningManagement from './components/admin/ScreeningManagement';
-import AdminUserManagementPage from './pages/AdminUserManagement';
+// Core Pages
+import Index from './pages/Index';
+import Auth from './pages/Auth';
+import AuthConfirm from './pages/AuthConfirm';
+import UpdatePassword from './pages/UpdatePassword';
+import NotFound from './pages/NotFound';
+
+// Onboarding Pages
+import OnboardingProfile from './pages/OnboardingProfile';
+import PretestPass from './pages/PretestPass';
 
 // Patient Pages
+import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
+import QuizList from './pages/QuizList';
+import Screening from './pages/Screening';
+import Results from './pages/Results';
 import History from './pages/History';
 import Education from './pages/Education';
 import EducationDetail from './pages/EducationDetail';
-import Profile from './pages/Profile';
 import ChatPage from './pages/ChatPage';
-import QuizList from './pages/QuizList';
-import CalmyPage from './pages/CalmyPage'; // Import CalmyPage
-import CalmyNoteForm from './pages/CalmyNoteForm'; // Import CalmyNoteForm
-
-// E-Modul Pages
+import CalmyPage from './pages/CalmyPage';
+import CalmyNoteForm from './pages/CalmyNoteForm';
 import EModulList from './pages/EModulList';
-import EModuleDetail from './pages/EModuleDetail';
 import PatientEModuleDetail from './pages/PatientEModuleDetail';
-import EModulAdminList from './pages/admin/EModulAdminList';
-import EModulAdminForm from './pages/admin/EModulAdminForm';
 
-// --- Layouts and Route Guards ---
+// Admin Pages
+import AdminDashboard from './pages/AdminDashboard';
+import AdminUserManagement from './pages/AdminUserManagement';
 
-/**
- * A layout for public routes, or for users who are not authenticated yet.
- */
-const PublicLayout = () => <Outlet />;
+// --- Route Guards & Gates ---
 
-/**
- * Gate to ensure new patients complete their profile before accessing the app.
- */
-const ProfileCompletionGate = ({ children }: { children: React.ReactNode }) => {
-  const { userProfile, isProfileLoading, isProfileComplete, isAuthenticated } = useAuth();
-  const location = useLocation();
-
-  if (isProfileLoading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-gray-50">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-3 text-lg text-gray-600">Memuat data pengguna...</p>
-      </div>
-    );
-  }
-
-  const isPatient = userProfile?.role === 'patient';
-  // Corrected Logic: Redirect ANY patient with an incomplete profile
-  const needsToCompleteProfile = isAuthenticated && isPatient && !isProfileComplete;
-
-  if (needsToCompleteProfile && location.pathname !== '/profile') {
-    return <Navigate to="/profile" state={{ from: location }} replace />;
-  }
-
-  return <>{children}</>;
-};
-
-/**
- * A route guard for authenticated users.
- * If the user is not authenticated, it redirects them to the /auth page.
- */
+// 1. Checks if a user is logged in.
 const AuthenticatedRoute = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isProfileLoading } = useAuth();
+  if (isProfileLoading) return <SplashScreen />;
   return isAuthenticated ? <Outlet /> : <Navigate to="/auth" replace />;
 };
 
-/**
- * A route guard for admin/midwife users.
- * If the user is not an admin, it redirects them to the regular user dashboard.
- */
-const AdminRouteGuard = () => {
-  const { userProfile } = useAuth();
-  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'midwife';
-  return isAdmin ? <AdminLayout /> : <Navigate to="/dashboard" replace />;
+// 2. Checks if the logged-in user has a 'patient' role.
+const PatientRoute = () => {
+  const { userProfile, isProfileLoading } = useAuth();
+  if (isProfileLoading) return <SplashScreen />;
+  const isPatient = userProfile?.role === 'patient';
+  return isPatient ? <Outlet /> : <Navigate to="/admin" replace />;
 };
 
-/**
- * A route guard for regular patient users.
- * If the user is an admin, it redirects them to the admin dashboard.
- */
-const PatientRouteGuard = () => {
-  const { userProfile } = useAuth();
+// 3. Checks if the logged-in user has an 'admin' or 'midwife' role.
+const AdminRoute = () => {
+  const { userProfile, isProfileLoading } = useAuth();
+  if (isProfileLoading) return <SplashScreen />;
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'midwife';
-  return !isAdmin ? <PatientLayout /> : <Navigate to="/admin" replace />;
+  return isAdmin ? <Outlet /> : <Navigate to="/dashboard" replace />;
 };
+
+// 4. The Onboarding Gate for Patients
+const OnboardingGate = () => {
+  const { status, isLoading } = useOnboardingStatus();
+  const location = useLocation();
+
+  if (isLoading) return <SplashScreen />;
+
+  // Step 1: Profile Completion
+  if (!status.isProfileComplete) {
+    return location.pathname === '/lengkapi-profil' ? <Outlet /> : <Navigate to="/lengkapi-profil" replace />;
+  }
+  // Step 2: Pre-test Completion
+  if (!status.isPretestComplete) {
+    return location.pathname === '/pretest-pass' ? <Outlet /> : <Navigate to="/pretest-pass" replace />;
+  }
+  
+  // If onboarding is complete but user tries to access onboarding pages, redirect them.
+  if (location.pathname === '/lengkapi-profil' || location.pathname === '/pretest-pass') {
+      return <Navigate to="/dashboard" replace />;
+  }
+
+  return <Outlet />; // Onboarding is complete, proceed to the main app.
+};
+
 
 // --- Main App Router ---
 const Router = () => {
   return (
     <BrowserRouter>
-      <ProfileCompletionGate>
-        <Routes>
-          {/* Public Routes */}
-          <Route element={<PublicLayout />}>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/auth/confirm" element={<AuthConfirm />} />
-            <Route path="/update-password" element={<UpdatePassword />} />
-          </Route>
+      <Routes>
+        {/* === PUBLIC ROUTES === */}
+        <Route path="/" element={<Index />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/auth/confirm" element={<AuthConfirm />} />
+        <Route path="/update-password" element={<UpdatePassword />} />
 
-          {/* Authenticated Routes */}
-          <Route element={<AuthenticatedRoute />}>
-            {/* The Profile page is accessible to all authenticated users 
-                but is not part of a specific layout that might redirect away from it. */}
-            {/* Regular User/Patient Routes */}
-            <Route element={<PatientRouteGuard />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/quiz" element={<QuizList />} />
-              <Route path="/quiz/:trimester" element={<Screening />} />
-              <Route path="/results" element={<Results />} />
-              <Route path="/history" element={<History />} />
-              <Route path="/education" element={<Education />} />
-              <Route path="/education/:id" element={<EducationDetail />} />
-              <Route path="/chatbot" element={<ChatPage />} /> {/* New Chatbot Route */}
-              {/* Calmy Routes */}
-              <Route path="/calmy" element={<CalmyPage />} />
-              <Route path="/calmy/new" element={<CalmyNoteForm />} />
-              <Route path="/calmy/:id/edit" element={<CalmyNoteForm />} />
+        {/* === AUTHENTICATED ROUTES === */}
+        <Route element={<AuthenticatedRoute />}>
 
-              {/* E-Modul Patient Route */}
-              <Route path="/emodules" element={<EModulList />} />
-              <Route path="/emodules/:id" element={<PatientEModuleDetail />} />
+          {/* --- PATIENT AREA --- */}
+          <Route element={<PatientRoute />}>
+            {/* Onboarding pages are inside PatientRoute but outside the Gate */}
+            <Route path="/lengkapi-profil" element={<OnboardingProfile />} />
+            <Route path="/pretest-pass" element={<PretestPass />} />
+            
+            <Route element={<OnboardingGate />}>
+              <Route element={<PatientLayout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/quiz" element={<QuizList />} />
+                <Route path="/quiz/:trimester" element={<Screening />} />
+                <Route path="/results" element={<Results />} />
+                <Route path="/history" element={<History />} />
+                <Route path="/education" element={<Education />} />
+                <Route path="/education/:id" element={<EducationDetail />} />
+                <Route path="/chatbot" element={<ChatPage />} />
+                <Route path="/calmy" element={<CalmyPage />} />
+                <Route path="/calmy/new" element={<CalmyNoteForm />} />
+                <Route path="/calmy/:id/edit" element={<CalmyNoteForm />} />
+                <Route path="/emodules" element={<EModulList />} />
+                <Route path="/emodules/:id" element={<PatientEModuleDetail />} />
+              </Route>
             </Route>
           </Route>
 
-          {/* Fallback Not Found Route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </ProfileCompletionGate>
+          {/* --- ADMIN AREA --- */}
+          <Route element={<AdminRoute />}>
+            <Route element={<AdminLayout />}>
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/users" element={<AdminUserManagement />} />
+                {/* Add other admin-specific routes here */}
+            </Route>
+          </Route>
+
+        </Route>
+
+        {/* === FALLBACK ROUTE === */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
     </BrowserRouter>
   );
 };
