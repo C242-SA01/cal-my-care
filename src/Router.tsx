@@ -24,7 +24,7 @@ import Profile from './pages/Profile';
 import QuizList from './pages/QuizList';
 import Screening from './pages/Screening';
 import Results from './pages/Results';
-import History from './pages/History';
+import CarePage from './pages/CarePage';
 import Education from './pages/Education';
 import EducationDetail from './pages/EducationDetail';
 import ChatPage from './pages/ChatPage';
@@ -112,9 +112,9 @@ const Router = () => {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/quiz" element={<QuizList />} />
-                <Route path="/quiz/:trimester" element={<Screening />} />
+                <Route path="/quiz/:quizType" element={<Screening />} />
                 <Route path="/results" element={<Results />} />
-                <Route path="/history" element={<History />} />
+                <Route path="/history" element={<CarePage />} />
                 <Route path="/education" element={<Education />} />
                 <Route path="/education/:id" element={<EducationDetail />} />
                 <Route path="/chatbot" element={<ChatPage />} />

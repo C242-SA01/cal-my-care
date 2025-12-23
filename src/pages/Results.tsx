@@ -320,10 +320,7 @@ export default function Results() {
             Lihat Materi Edukasi
           </Button>
 
-          <Button variant="outline" size="lg" onClick={() => navigate('/screening')} className="flex-1">
-            <TrendingUp className="h-4 w-4 mr-2" />
-            Skrining Ulang
-          </Button>
+
         </div>
 
         {/* Important Notice */}

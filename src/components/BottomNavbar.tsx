@@ -5,7 +5,8 @@ const menuItems = [
   { to: '/dashboard', icon: Home, label: 'Home' },
   { to: '/quiz', icon: ClipboardList, label: 'Quiz' },
   { to: '/calmy', icon: Heart, label: 'Calmy' },
-  { to: '/education', icon: BookOpen, label: 'Edukasi' },
+  // { to: '/education', icon: BookOpen, label: 'Edukasi' },
+  { to: '/emodules', icon: BookOpen, label: 'E-Modul' },
   // { to: '/history', icon: LayoutDashboard, label: 'Riwayat' },
   { to: '/history', icon: LayoutDashboard, label: 'Care' },
 ];

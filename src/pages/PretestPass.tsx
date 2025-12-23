@@ -48,7 +48,6 @@ export default function PretestPass() {
       
       setIsLoading(true);
       try {
-        // 1. Fetch PASS questions only
         const { data: passData, error: passError } = await supabase
           .from('pass_questions')
           .select('*')
@@ -58,13 +57,12 @@ export default function PretestPass() {
         const passQuestions = (passData || []).map(q => ({ ...q, type: 'pass' as const }));
         setQuestions(passQuestions);
 
-        // 2. Initialize or find an 'in_progress' pre-test screening
         const { data: existingScreenings, error: existingError } = await supabase
           .from('screenings')
           .select('id')
           .eq('user_id', user.id)
           .eq('status', 'in_progress')
-          .eq('screening_type', 'pretest') // Identify as pretest
+          .eq('screening_type', 'pretest')
           .order('created_at', { ascending: false })
           .limit(1);
 
@@ -78,25 +76,19 @@ export default function PretestPass() {
             .insert({ user_id: user.id, status: 'in_progress', screening_type: 'pretest' })
             .select('id')
             .single();
-
           if (error) throw error;
           currentScreeningId = newScreening.id;
         }
         
         setScreeningId(currentScreeningId);
         
-        // 3. Load saved answers and index from sessionStorage
         const answersKey = `pretest-answers-${currentScreeningId}`;
         const indexKey = `pretest-index-${currentScreeningId}`;
         const savedAnswersJson = sessionStorage.getItem(answersKey);
         const savedIndex = sessionStorage.getItem(indexKey);
 
-        if (savedAnswersJson) {
-          setAnswers(JSON.parse(savedAnswersJson));
-        }
-        if (savedIndex) {
-          setCurrentQuestionIndex(parseInt(savedIndex, 10));
-        }
+        if (savedAnswersJson) setAnswers(JSON.parse(savedAnswersJson));
+        if (savedIndex) setCurrentQuestionIndex(parseInt(savedIndex, 10));
 
       } catch (error: any) {
         toast({
@@ -123,7 +115,6 @@ export default function PretestPass() {
     if (screeningId) {
       sessionStorage.setItem(`pretest-answers-${screeningId}`, JSON.stringify(updatedAnswers));
     }
-    console.log('handleAnswerChange: updatedAnswers', updatedAnswers); // DEBUG LOG
   };
 
   const handleNext = () => {
@@ -137,9 +128,10 @@ export default function PretestPass() {
   };
 
   const calculateAnxietyLevel = (totalScore: number): 'normal' | 'ringan' | 'sedang' | 'berat' => {
-    if (totalScore >= 0 && totalScore <= 20) return 'normal';
-    if (totalScore >= 21 && totalScore <= 26) return 'ringan';
-    if (totalScore >= 27 && totalScore <= 40) return 'sedang';
+    const score = Math.max(0, Math.min(totalScore, 93));
+    if (score >= 0 && score <= 28) return 'normal';
+    if (score >= 29 && score <= 46) return 'ringan';
+    if (score >= 47 && score <= 64) return 'sedang';
     return 'berat';
   };
 
@@ -148,17 +140,10 @@ export default function PretestPass() {
     setIsSubmitting(true);
     
     try {
-      // 1. Save answers
-      const answersToSave = answers.map(answer => ({
-        screening_id: screeningId,
-        question_id: answer.question_id,
-        score: answer.score,
-        question_type: answer.question_type,
-      }));
+      const answersToSave = answers.map(answer => ({ ...answer, screening_id: screeningId }));
       const { error: answersError } = await supabase.from('screening_answers').upsert(answersToSave, { onConflict: 'screening_id, question_id' });
       if (answersError) throw answersError;
       
-      // 2. Update screening entry
       const totalScore = answers.reduce((sum, answer) => sum + answer.score, 0);
       const anxietyLevel = calculateAnxietyLevel(totalScore);
       const { error: screeningError } = await supabase
@@ -172,14 +157,12 @@ export default function PretestPass() {
         .eq('id', screeningId);
       if (screeningError) throw screeningError;
 
-      // 3. IMPORTANT: Update profile to mark pretest as completed
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ is_pretest_pass_completed: true, pretest_pass_completed_at: new Date().toISOString() })
         .eq('id', user.id);
       if (profileError) throw profileError;
       
-      // 4. Clean up session storage
       sessionStorage.removeItem(`pretest-answers-${screeningId}`);
       sessionStorage.removeItem(`pretest-index-${screeningId}`);
 
@@ -190,17 +173,11 @@ export default function PretestPass() {
         description: "Terima kasih, Bunda. Onboarding Anda telah selesai. Selamat datang di CalMyCare!",
       });
 
-      // *** THE FIX ***
-      // Navigate to a gated route; the OnboardingGate will see the new state and allow access.
       navigate('/dashboard', { replace: true });
-      console.log('handleComplete: Successfully completed and navigated.'); // DEBUG LOG
-
     } catch (error: any) {
       toast({ title: "Error Menyelesaikan Kuis", description: error.message, variant: "destructive" });
-      console.error('handleComplete: Error:', error); // DEBUG LOG
     } finally {
       setIsSubmitting(false);
-      console.log('handleComplete: isSubmitting set to false.'); // DEBUG LOG
     }
   };
 
@@ -216,19 +193,8 @@ export default function PretestPass() {
   const currentAnswer = answers.find(a => a.question_id === currentQuestion?.id);
   const progress = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
-  const canProceed = currentAnswer !== undefined && answers.length === questions.length; // Modified canProceed for debugging
-  
-  console.log('PretestPass Render Debug:'); // DEBUG LOG
-  console.log('  currentQuestionIndex:', currentQuestionIndex); // DEBUG LOG
-  console.log('  questions.length:', questions.length); // DEBUG LOG
-  console.log('  currentQuestion:', currentQuestion); // DEBUG LOG
-  console.log('  currentAnswer:', currentAnswer); // DEBUG LOG
-  console.log('  isLastQuestion:', isLastQuestion); // DEBUG LOG
-  console.log('  canProceed:', canProceed); // DEBUG LOG
-  console.log('  isSubmitting:', isSubmitting); // DEBUG LOG
-  console.log('  answers (total):', answers.length); // DEBUG LOG
-  console.log('  answers (data):', answers); // DEBUG LOG
-
+  const canProceedToNext = currentAnswer !== undefined;
+  const canComplete = answers.length === questions.length;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-pink-50 via-rose-50/60 to-amber-50/40 p-4">
@@ -271,12 +237,12 @@ export default function PretestPass() {
 
           <div className="flex justify-end pt-4 mt-4 border-t">
               {isLastQuestion ? (
-                <Button onClick={handleComplete} disabled={!canProceed || isSubmitting} className="rounded-2xl bg-pink-500 text-white hover:bg-pink-600 px-8 py-3 text-base">
+                <Button onClick={handleComplete} disabled={!canComplete || isSubmitting} className="rounded-2xl bg-pink-500 text-white hover:bg-pink-600 px-8 py-3 text-base">
                   {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Selesai & Lihat Hasil
                 </Button>
               ) : (
-                <Button onClick={handleNext} disabled={!canProceed} className="rounded-2xl bg-slate-800 text-white hover:bg-slate-900 px-8 py-3 text-base">
+                <Button onClick={handleNext} disabled={!canProceedToNext} className="rounded-2xl bg-slate-800 text-white hover:bg-slate-900 px-8 py-3 text-base">
                   Selanjutnya <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               )}

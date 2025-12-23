@@ -8,7 +8,7 @@ import CalmyNoteList from '@/components/calmy/CalmyNoteList';
 import { supabase } from '@/integrations/supabase/client';
 import { CalmyNote } from '@/integrations/supabase/types';
 import { useAuth } from '@/hooks/useAuth';
-import { startOfMonth, endOfMonth, format } from 'date-fns';
+import { startOfMonth, endOfMonth, format, isSameDay } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -31,7 +31,7 @@ const CalmyPage = () => {
 
   // State for the calendar
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined); // MODIFIED: Default to undefined
   
   // State for notes
   const [notes, setNotes] = useState<CalmyNote[]>([]);
@@ -80,19 +80,26 @@ const CalmyPage = () => {
 
   // Filter notes based on the selected date
   const filteredNotes = useMemo(() => {
-    if (!selectedDate) return notes;
+    if (!selectedDate) return notes; // If no date selected, return all notes for the month
     return notes.filter(
-      (note) => format(new Date(note.note_date.replace(/-/g, '/')), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
+      (note) => isSameDay(new Date(note.note_date.replace(/-/g, '/')), selectedDate)
     );
   }, [notes, selectedDate]);
   
   const handleDateClick = (date: Date | undefined) => {
-    setSelectedDate(date);
+    // MODIFIED LOGIC: If the same date is clicked again, unset selectedDate to show month view
+    if (selectedDate && date && isSameDay(selectedDate, date)) {
+      setSelectedDate(undefined);
+    } else {
+      setSelectedDate(date);
+    }
+
+    // Only navigate to create a new note if a specific date is selected and has no notes yet
     if (date) {
-      const hasNotes = highlightedDays.some(
-        d => format(d, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
+      const hasNotesOnSelectedDate = notes.some(
+        note => isSameDay(new Date(note.note_date.replace(/-/g, '/')), date)
       );
-      if (!hasNotes) {
+      if (!hasNotesOnSelectedDate) {
         navigate(`/calmy/new?date=${format(date, 'yyyy-MM-dd')}`);
       }
     }
@@ -166,7 +173,7 @@ const CalmyPage = () => {
                 <CardTitle className="text-pink-900/80">
                   {selectedDate 
                     ? `Catatan ${format(selectedDate, 'd MMMM yyyy', { locale: localeId })}`
-                    : 'Catatan Terbaru'}
+                    : `Catatan Bulan ${format(currentMonth, 'MMMM yyyy', { locale: localeId })}`} {/* MODIFIED: Title for month view */}
                 </CardTitle>
               </CardHeader>
               <CardContent>
