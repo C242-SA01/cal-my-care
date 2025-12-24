@@ -71,7 +71,7 @@ export default function EModulList() {
             <p className="text-muted-foreground mt-2">Saat ini belum ada modul edukasi yang tersedia. Silakan kembali lagi nanti.</p>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {modules.map((module) => (
             <Card key={module.id} className="flex flex-col">
               <CardHeader>
