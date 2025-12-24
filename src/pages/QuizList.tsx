@@ -22,19 +22,19 @@ interface QuizStatusData {
 const quizzesConfig = [
   {
     key: 'trimester_1' as const,
-    title: 'Kuesioner Trimester 1',
+    title: 'Trimester 1',
     description: 'Skrining khusus untuk memantau kondisi Bunda di awal masa kehamilan.',
     info: 'Akan terbuka secara otomatis saat usia kehamilan Bunda memasuki Trimester 1.',
   },
   {
     key: 'trimester_2' as const,
-    title: 'Kuesioner Trimester 2',
+    title: 'Trimester 2',
     description: 'Skrining lanjutan untuk Bunda yang memasuki pertengahan masa kehamilan.',
     info: 'Akan terbuka secara otomatis saat usia kehamilan Bunda memasuki Trimester 2.',
   },
   {
     key: 'trimester_3' as const,
-    title: 'Kuesioner Trimester 3',
+    title: 'Trimester 3',
     description: 'Skrining di akhir masa kehamilan untuk mempersiapkan persalinan.',
     info: 'Akan terbuka secara otomatis saat usia kehamilan Bunda memasuki Trimester 3.',
   },
@@ -54,11 +54,16 @@ const QuizList = () => {
     // The RPC now returns a single JSONB object, so .single() is appropriate.
     const { data, error } = await supabase.rpc('get_user_quiz_status').single();
     if (error) throw new Error(error.message);
-    if (!data) throw new Error("Tidak dapat mengambil status kuis.");
+    if (!data) throw new Error('Tidak dapat mengambil status kuis.');
     return data as QuizStatusData;
   };
 
-  const { data: quizStatusData, isLoading, isError, error } = useQuery<QuizStatusData>({
+  const {
+    data: quizStatusData,
+    isLoading,
+    isError,
+    error,
+  } = useQuery<QuizStatusData>({
     queryKey: ['quizStatusV2', user?.id], // Use a new queryKey to avoid conflicts
     queryFn: fetchQuizStatus,
     enabled: !!user,
@@ -99,9 +104,9 @@ const QuizList = () => {
       </div>
     );
   }
-  
+
   if (!quizStatusData) {
-     return (
+    return (
       <div className="flex flex-col justify-center items-center h-full min-h-[60vh] text-center">
         <Frown className="h-10 w-10 text-slate-500 mb-4" />
         <p className="text-lg font-medium text-slate-700">Data Tidak Ditemukan</p>
@@ -114,22 +119,12 @@ const QuizList = () => {
     <div className="p-4 md:p-6 space-y-6">
       <div className="text-center max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold text-slate-800">Skrining Rutin</h1>
-        <p className="text-md text-slate-500 mt-2">
-          Pantau kondisi kesehatan mental Bunda secara berkala melalui serangkaian kuesioner yang dirancang sesuai dengan tahap kehamilan.
-        </p>
+        <p className="text-md text-slate-500 mt-2">Pantau kondisi kesehatan mental Bunda secara berkala melalui serangkaian kuesioner yang dirancang sesuai dengan tahap kehamilan.</p>
       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 max-w-4xl mx-auto pt-4">
         {quizzesConfig.map((quiz) => {
           const detail = quizStatusData[quiz.key];
-          return (
-            <QuizCard
-              key={quiz.key}
-              title={quiz.title}
-              description={detail.status === 'locked' ? quiz.info : quiz.description}
-              status={detail.status}
-              onClick={() => handleCardClick(quiz.key, detail)}
-            />
-          );
+          return <QuizCard key={quiz.key} title={quiz.title} description={detail.status === 'locked' ? quiz.info : quiz.description} status={detail.status} onClick={() => handleCardClick(quiz.key, detail)} />;
         })}
       </div>
     </div>
