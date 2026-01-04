@@ -1,4 +1,4 @@
-import { Home, ClipboardList, BookOpen, LayoutDashboard, Heart } from 'lucide-react';
+import { Home, ClipboardList, BookOpen, LayoutDashboard, Heart, Video, VideoIcon } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 const menuItems = [
@@ -6,6 +6,7 @@ const menuItems = [
   { to: '/quiz', icon: ClipboardList, label: 'Quiz' },
   { to: '/calmy', icon: Heart, label: 'Calmy' },
   // { to: '/education', icon: BookOpen, label: 'Edukasi' },
+  { to: '/education', icon: VideoIcon, label: 'Video' },
   { to: '/emodules', icon: BookOpen, label: 'E-Modul' },
   // { to: '/history', icon: LayoutDashboard, label: 'Riwayat' },
   { to: '/history', icon: LayoutDashboard, label: 'Care' },

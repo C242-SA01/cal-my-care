@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, LineChart, LogOut, Package2, Users, BookOpen, User as UserIcon } from 'lucide-react';
+import { Home, LineChart, LogOut, Package2, Users, BookOpen, User as UserIcon, VideoIcon } from 'lucide-react';
 import { Button } from './ui/button';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -49,15 +49,15 @@ const SidebarContent = ({ onLinkClick }: SidebarContentProps) => {
             onClick={handleLinkClick}
             className={({ isActive }) => `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`}
           >
-            <BookOpen className="h-4 w-4" />
-            Edukasi
+            <VideoIcon className="h-4 w-4" />
+            Video
           </NavLink>
           <NavLink
             to="/admin/emodules"
             onClick={handleLinkClick}
             className={({ isActive }) => `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-muted text-primary' : ''}`}
           >
-            <Package2 className="h-4 w-4" />
+            <BookOpen className="h-4 w-4" />
             E-Module
           </NavLink>
           <NavLink

@@ -150,7 +150,7 @@ const EModuleDetail: React.FC = () => {
           <div className="mt-4">
             {publicPdfUrl ? (
               <div className="rounded-xl border border-pink-50 bg-[#FFF0F4] p-4">
-                <FlipbookViewer pdfUrl={publicPdfUrl} title={module.title} cover={module.cover_image_url ?? null} className="min-h-[64vh]" />
+                <FlipbookViewer pdfUrl={publicPdfUrl} title={module.title} cover={module.cover_image_url ?? null} className="min-h-[50vh] md:min-h-[64vh]" />
               </div>
             ) : (
               <div className="text-center py-12 border rounded-lg bg-white">

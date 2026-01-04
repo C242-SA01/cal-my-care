@@ -19,14 +19,17 @@ const ChatPage: React.FC = () => {
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (input.trim() && !isLoading) { // Disable sending if already loading
+    if (input.trim() && !isLoading) {
+      // Disable sending if already loading
       sendMessage(input);
       setInput('');
     }
   };
 
   return (
-    <div className="flex h-screen flex-col bg-white"> {/* Adjusted height to h-screen */}
+    <div className="flex h-screen flex-col bg-white">
+      {' '}
+      {/* Adjusted height to h-screen */}
       <header className="flex items-center justify-between border-b bg-rose-50 px-4 py-3">
         <div className="flex items-center gap-3">
           <Bot className="h-6 w-6 text-pink-600" />
@@ -44,17 +47,11 @@ const ChatPage: React.FC = () => {
           <div ref={scrollRef} />
         </div>
       </main>
-      <footer className="border-t bg-white p-4">
+      <footer className="border-t bg-white pb-24 pt-4 px-4">
         <form onSubmit={handleSend} className="relative">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ketik pertanyaan Anda di sini..."
-            className="pr-12 rounded-full"
-            disabled={isLoading}
-          />
+          <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ketik pertanyaan Anda di sini..." className="pr-12 rounded-full" disabled={isLoading} />
           <Button type="submit" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-rose-500 hover:bg-rose-600" disabled={isLoading}>
-            {isLoading ? <Loader className="h-4 w-4 animate-spin"/> : <Send className="h-4 w-4" />}
+            {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </form>
       </footer>
