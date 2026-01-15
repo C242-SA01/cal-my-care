@@ -1,45 +1,50 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Dispatch, SetStateAction } from 'react';
 
 /**
- * A custom hook to persist form state in sessionStorage.
- * This helps preserve user input across page reloads or tab switches,
- * significantly improving user experience for long or complex forms.
+ * Custom hook untuk menyimpan state form ke sessionStorage.
+ * Ini membantu menjaga input pengguna saat reload halaman atau pindah tab.
  *
- * @param storageKey A unique key to identify the form's data in sessionStorage.
- * @param initialState The default state for the form.
- * @returns A tuple containing the state, a state updater function, and a function to clear the persisted state.
+ * @param storageKey Kunci unik untuk data form di sessionStorage.
+ * @param initialState State awal untuk form.
+ * @returns Tuple yang berisi state, fungsi untuk update state, dan fungsi untuk membersihkan state.
  */
-export function useFormPersistence<T>(storageKey: string, initialState: T): [T, (newState: T) => void, () => void] {
+export function useFormPersistence<T>(
+  storageKey: string,
+  initialState: T
+): [T, Dispatch<SetStateAction<T>>, () => void] {
+  
+  // Inisialisasi state dari sessionStorage, atau gunakan state awal jika tidak ada.
   const [state, setState] = useState<T>(() => {
     try {
       const storedItem = sessionStorage.getItem(storageKey);
-      return storedItem ? JSON.parse(storedItem) : initialState;
+      if (storedItem && storedItem !== 'undefined') {
+        return JSON.parse(storedItem);
+      }
     } catch (error) {
-      console.error(`Error reading from sessionStorage for key "${storageKey}":`, error);
-      return initialState;
+      console.error("Gagal membaca dari sessionStorage:", error);
     }
+    return initialState;
   });
 
+  // Tulis ke sessionStorage setiap kali state berubah.
   useEffect(() => {
     try {
       sessionStorage.setItem(storageKey, JSON.stringify(state));
     } catch (error) {
-      console.error(`Error writing to sessionStorage for key "${storageKey}":`, error);
+      console.error("Gagal menulis ke sessionStorage:", error);
     }
   }, [state, storageKey]);
 
+  // Fungsi untuk membersihkan state dari sessionStorage.
   const clearState = useCallback(() => {
     try {
       sessionStorage.removeItem(storageKey);
       setState(initialState);
     } catch (error) {
-      console.error(`Error clearing sessionStorage for key "${storageKey}":`, error);
+      console.error("Gagal membersihkan sessionStorage:", error);
     }
   }, [storageKey, initialState]);
 
-  const updateState = useCallback((newState: T) => {
-    setState(newState);
-  }, []);
-
-  return [state, updateState, clearState];
+  // Kembalikan state dan fungsi setState asli dari React, yang dijamin stabil.
+  return [state, setState, clearState];
 }

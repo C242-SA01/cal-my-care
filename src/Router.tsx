@@ -36,6 +36,10 @@ import PatientEModuleDetail from './pages/PatientEModuleDetail';
 // Admin Pages
 import AdminDashboard from './pages/AdminDashboard';
 import AdminUserManagement from './pages/AdminUserManagement';
+import PatientManagement from './components/admin/PatientManagement';
+import EducationManagement from './components/admin/EducationManagement';
+import ScreeningManagement from './components/admin/ScreeningManagement';
+import EModulAdminForm from './pages/admin/EModulAdminForm';
 
 // --- Route Guards & Gates ---
 
@@ -132,7 +136,13 @@ const Router = () => {
             <Route element={<AdminLayout />}>
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/users" element={<AdminUserManagement />} />
-                {/* Add other admin-specific routes here */}
+                <Route path="/admin/emodules" element={<EModulList />} />
+                <Route path="/admin/emodules/new" element={<EModulAdminForm />} />
+                <Route path="/admin/emodules/:id/edit" element={<EModulAdminForm />} />
+                <Route path="/admin/patients" element={<PatientManagement />} />
+                <Route path="/admin/education" element={<EducationManagement />} />
+                <Route path="/admin/results" element={<ScreeningManagement />} />
+                <Route path="/admin/profile" element={<Profile />} />
             </Route>
           </Route>
 
