@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { FileText, BookOpen, TrendingUp, Loader2, History } from 'lucide-react';
+import { LatestReview } from '@/components/calmy/LatestReview';
 
 interface Screening {
   id: string;
@@ -101,6 +102,8 @@ export default function Dashboard() {
         <h1 className="text-2xl md:text-3xl font-bold">Selamat Datang, {userProfile?.full_name || 'Bunda'}!</h1>
         <p className="text-muted-foreground mt-1">Pantau kesehatan mental Anda selama kehamilan dengan mudah dan aman.</p>
       </div>
+
+      <LatestReview />
 
       {/* In-progress screening alert */}
       {inProgressScreening && (

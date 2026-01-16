@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,8 +23,9 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, Edit, Trash2, BookOpen } from "lucide-react";
+import { Loader2, Edit, Trash2, BookOpen, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 
 type EModule = {
   id: string;
@@ -42,6 +43,7 @@ export default function EModulList() {
   const { toast } = useToast();
   const { userProfile } = useAuth();
   const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
 
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'midwife';
 
@@ -76,6 +78,13 @@ export default function EModulList() {
 
     fetchModules();
   }, [toast, isAdmin]);
+
+  const filteredModules = useMemo(() => {
+    return modules.filter((module) =>
+      module.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      module.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [modules, searchTerm]);
   
   const handleDelete = async (moduleId: string) => {
     // First, get the file paths to delete from storage
@@ -139,7 +148,7 @@ export default function EModulList() {
 
   return (
     <div className="container mx-auto py-10">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">E-Modul Edukasi</h1>
           <p className="text-muted-foreground">
@@ -147,11 +156,23 @@ export default function EModulList() {
           </p>
         </div>
         {isAdmin && (
-            <Button asChild>
-                <Link to="/admin/emodules/new">
-                    Tambah Materi
-                </Link>
-            </Button>
+            <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-2">
+                 <div className="relative flex-grow">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                        type="search" 
+                        placeholder="Cari judul atau deskripsi..." 
+                        className="pl-8 w-full" 
+                        value={searchTerm} 
+                        onChange={(e) => setSearchTerm(e.target.value)} 
+                    />
+                </div>
+                <Button asChild className="flex-shrink-0">
+                    <Link to="/admin/emodules/new">
+                        Tambah Materi
+                    </Link>
+                </Button>
+            </div>
         )}
       </div>
       {modules.length === 0 ? (
@@ -161,9 +182,16 @@ export default function EModulList() {
                 {isAdmin ? "Mulai tambahkan modul edukasi baru." : "Saat ini belum ada modul edukasi yang tersedia. Silakan kembali lagi nanti."}
             </p>
         </div>
+      ) : filteredModules.length === 0 ? (
+        <div className="text-center py-16 border rounded-lg">
+            <h2 className="text-xl font-semibold">Modul Tidak Ditemukan</h2>
+            <p className="text-muted-foreground mt-2">
+                Tidak ada modul yang cocok dengan kriteria pencarian Anda.
+            </p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {modules.map((module) => (
+          {filteredModules.map((module) => (
             <Card key={module.id} className="flex flex-col">
               <CardHeader>
                 <div className="flex justify-between items-start">

@@ -29,7 +29,15 @@ interface ScreeningResult {
   notes: string | null;
 }
 
-interface ScreeningDetail extends ScreeningResult {
+interface ScreeningDetail {
+  screening_id: string;
+  completed_at: string;
+  total_score: number;
+  anxiety_level: 'normal' | 'ringan' | 'sedang' | 'berat';
+  status: ScreeningStatus;
+  notes: string | null;
+  full_name: string | null;
+  email: string | null;
   question_text: string;
   answer_score: number;
 }
@@ -392,7 +400,7 @@ export default function ScreeningManagement() {
                   </TableBody>
                 </Table>
               </div>
-              <ScreeningReviewForm screeningId={modalData[0].id} initialNotes={modalData[0].notes || ''} initialStatus={modalData[0].status} onSave={handleReviewSaved} onCancel={handleCloseModal} />
+              <ScreeningReviewForm screeningId={modalData[0].screening_id} initialNotes={modalData[0].notes || ''} initialStatus={modalData[0].status} onSave={handleReviewSaved} onCancel={handleCloseModal} />
             </div>
           ) : (
             <div className="text-amber-600 p-8 text-center">

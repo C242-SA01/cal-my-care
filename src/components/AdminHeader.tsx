@@ -10,7 +10,7 @@ interface AdminHeaderProps {
 
 export const AdminHeader = ({ isMobile }: AdminHeaderProps) => {
   return (
-    <header className="flex h-14 items-center justify-between gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
+    <header className="flex h-14 items-center justify-between gap-4 border-b bg-card/80 backdrop-blur-sm px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
       {isMobile ? (
         <Sheet>
           <SheetTrigger asChild>

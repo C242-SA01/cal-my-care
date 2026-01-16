@@ -143,6 +143,7 @@ const Router = () => {
                 <Route path="/admin/education" element={<EducationManagement />} />
                 <Route path="/admin/results" element={<ScreeningManagement />} />
                 <Route path="/admin/profile" element={<Profile />} />
+                <Route path="/admin/chatbot" element={<ChatPage />} />
             </Route>
           </Route>
 

@@ -82,18 +82,7 @@ export default function EModulAdminForm() {
             tags: Array.isArray(data.tags) ? data.tags.join(", ") : "",
           };
           
-          // Check for a saved draft and merge it
-          const savedDraft = sessionStorage.getItem(draftKey);
-          if (savedDraft) {
-            try {
-              const draftData = JSON.parse(savedDraft);
-              form.reset({ ...fetchedData, ...draftData });
-            } catch {
-              form.reset(fetchedData); // Fallback if draft is corrupt
-            }
-          } else {
-            form.reset(fetchedData);
-          }
+          form.reset(fetchedData);
         }
         setIsLoading(false);
       };

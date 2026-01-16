@@ -232,9 +232,9 @@ export default function Results() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5 text-primary" />
-                Tinjauan dari Bidan
+                Tinjauan dari Admin
               </CardTitle>
-              <CardDescription>Berikut adalah catatan dan rekomendasi dari bidan berdasarkan hasil skrining Anda.</CardDescription>
+                  Berikut adalah catatan dan rekomendasi dari admin berdasarkan hasil skrining Anda.
             </CardHeader>
             <CardContent>
               <div className="prose prose-sm max-w-none text-foreground">
@@ -319,8 +319,6 @@ export default function Results() {
             <BookOpen className="h-4 w-4 mr-2" />
             Lihat Materi Edukasi
           </Button>
-
-
         </div>
 
         {/* Important Notice */}

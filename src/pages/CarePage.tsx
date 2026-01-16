@@ -24,11 +24,15 @@ import { useNavigate } from 'react-router-dom';
 
 // --- Data Structures ---
 interface ScreeningHistoryItem {
-  id: string; // Added id for navigation
+  id: string;
   screening_type: string;
   total_score: number;
   anxiety_level: 'normal' | 'ringan' | 'sedang' | 'berat';
   completed_at: string;
+  // Fields for review
+  status: 'completed' | 'reviewed';
+  notes: string | null;
+  reviewed_at: string | null;
 }
 
 const levelToNumberMapping: { [key: string]: number } = {
@@ -72,25 +76,22 @@ const CarePage = () => {
 
   // --- Data Fetching ---
   const fetchHistory = async () => {
-    // The V2 RPC now returns all necessary columns, including 'id'.
-    // The call should be simple, without a 'select' parameter.
+    // Using the v3 RPC function which includes review data
     const { data, error } = await supabase.rpc('get_screening_history');
     
     if (error) {
-      // The error "Could not find the function..." originates from here.
-      // This new call is correct and should resolve it.
       throw new Error(error.message);
     }
     return data as ScreeningHistoryItem[];
   };
 
   const { data: historyData, isLoading, isError, error } = useQuery<ScreeningHistoryItem[]>({
-    queryKey: ['screeningHistory_v2', user?.id], // Updated queryKey to prevent caching issues
+    queryKey: ['screeningHistory_v3', user?.id], // Use v3 key to refetch
     queryFn: fetchHistory,
     enabled: !!user,
   });
 
-  // --- Data Processing for Charts ---
+  // --- Data Processing for Charts (remains the same) ---
   const { prePostData, trimesterData } = useMemo(() => {
     if (!historyData) return { prePostData: [], trimesterData: [] };
 
@@ -105,13 +106,11 @@ const CarePage = () => {
     if (postTestResult) {
       prePost.push({ name: 'Post-Test', level: levelToNumberMapping[postTestResult.anxiety_level] ?? 0 });
     }
-    // If only one is present, still show it. If none, array is empty.
 
     // Process for Chart 2: Trimester Trend
     const trimesterMap = new Map<string, ScreeningHistoryItem>();
     historyData.forEach(item => {
       if (item.screening_type.startsWith('trimester_')) {
-        // Only take the latest completed quiz for each trimester
         const existing = trimesterMap.get(item.screening_type);
         if (!existing || new Date(item.completed_at) > new Date(existing.completed_at)) {
           trimesterMap.set(item.screening_type, item);
@@ -120,7 +119,7 @@ const CarePage = () => {
     });
 
     const trimesters = Array.from(trimesterMap.values())
-      .sort((a, b) => { // Sort by trimester number
+      .sort((a, b) => {
         const numA = parseInt(a.screening_type.split('_')[1]);
         const numB = parseInt(b.screening_type.split('_')[1]);
         return numA - numB;
@@ -134,7 +133,7 @@ const CarePage = () => {
   }, [historyData]);
 
 
-  // --- UI Render States ---
+  // --- UI Render States (remains the same) ---
   if (isLoading) {
     return (
       <div className="flex flex-col justify-center items-center h-full min-h-[60vh] text-center">
@@ -160,18 +159,6 @@ const CarePage = () => {
     );
   }
 
-  // Helper for skeleton
-  const HistoryCardSkeleton = () => (
-    <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50 animate-pulse">
-      <div className="space-y-2">
-        <div className="h-5 w-32 bg-muted-foreground/20 rounded"></div>
-        <div className="h-4 w-24 bg-muted-foreground/20 rounded"></div>
-      </div>
-      <div className="h-8 w-20 bg-muted-foreground/20 rounded-full"></div>
-    </div>
-  );
-
-
   // --- Main Component Render ---
   return (
     <div className="p-4 md:p-6 space-y-8 bg-pink-50/20 min-h-screen">
@@ -180,10 +167,9 @@ const CarePage = () => {
         <p className="text-md text-slate-500 mt-2">Lihat rangkuman hasil skrining Bunda dari waktu ke waktu.</p>
       </header>
       
-      {/* Charts Section */}
-      {(prePostData.length > 0 || trimesterData.length > 0) ? (
+      {/* Charts Section (remains the same) */}
+      {(prePostData.length > 0 || trimesterData.length > 0) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Chart 1: Pre-Post Test Comparison */}
           {prePostData.length > 0 && (
             <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg shadow-pink-100/50">
               <h3 className="font-semibold text-lg text-slate-700 mb-1 flex items-center">
@@ -194,27 +180,16 @@ const CarePage = () => {
                 <RechartsBarChart data={prePostData} margin={{ top: 20, right: 10, left: -20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis dataKey="name" stroke="#a1a1aa" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis 
-                    type="number" 
-                    domain={[0, 3]} 
-                    ticks={[0, 1, 2, 3]} 
-                    tickFormatter={(value) => numberToLevelMapping[value]} 
-                    stroke="#a1a1aa" 
-                    fontSize={12} 
-                  />
+                  <YAxis type="number" domain={[0, 3]} ticks={[0, 1, 2, 3]} tickFormatter={(value) => numberToLevelMapping[value]} stroke="#a1a1aa" fontSize={12} />
                   <Tooltip cursor={{ fill: '#fce7f3' }} contentStyle={{ backgroundColor: 'white', borderRadius: '0.75rem', borderColor: '#fce7f3' }} />
                   <Bar dataKey="level" fill="#f472b6" radius={[8, 8, 0, 0]}>
                     <LabelList dataKey="level" position="top" formatter={(value: number) => numberToLevelMapping[value]} fontSize={12} />
                   </Bar>
                 </RechartsBarChart>
               </ResponsiveContainer>
-              <p className="text-sm text-center text-slate-500 mt-3 px-4">
-                Grafik ini membantu Bunda melihat perubahan kondisi dari sebelum dan sesudah menggunakan CalMyCare.
-              </p>
+              <p className="text-sm text-center text-slate-500 mt-3 px-4">Grafik ini membantu Bunda melihat perubahan kondisi dari sebelum dan sesudah menggunakan CalMyCare.</p>
             </div>
           )}
-
-          {/* Chart 2: Trimester Trend */}
           {trimesterData.length > 0 && (
             <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg shadow-pink-100/50">
               <h3 className="font-semibold text-lg text-slate-700 mb-1 flex items-center">
@@ -230,19 +205,13 @@ const CarePage = () => {
                   <Line type="monotone" dataKey="skor" stroke="#ec4899" strokeWidth={3} activeDot={{ r: 8 }} dot={{ r: 6 }} />
                 </RechartsLineChart>
               </ResponsiveContainer>
-              <p className="text-sm text-center text-slate-500 mt-3 px-4">
-                Setiap titik menunjukkan skormu, membantu melihat tren kondisi di tiap tahap kehamilan.
-              </p>
+              <p className="text-sm text-center text-slate-500 mt-3 px-4">Setiap titik menunjukkan skormu, membantu melihat tren kondisi di tiap tahap kehamilan.</p>
             </div>
           )}
         </div>
-      ) : (
-        // No chart data, but history data might still exist (e.g., only pretest, not posttest yet)
-        // or historyData.length === 0 implies no data
-        null
       )}
 
-      {/* --- Full History List --- */}
+      {/* --- Full History List (UPDATED) --- */}
       <Card className="bg-white p-0 rounded-2xl shadow-lg shadow-pink-100/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-slate-700">
@@ -252,13 +221,7 @@ const CarePage = () => {
           <p className="text-sm text-slate-500">Daftar semua skrining yang telah Bunda lakukan.</p>
         </CardHeader>
         <CardContent className="p-0">
-          {isLoading ? (
-            <div className="space-y-4 p-4">
-              {[...Array(3)].map((_, i) => (
-                <HistoryCardSkeleton key={i} />
-              ))}
-            </div>
-          ) : historyData.length === 0 ? (
+          {historyData.length === 0 ? (
             <div className="flex flex-col items-center justify-center text-center py-16">
               <AlertTriangle className="h-12 w-12 text-slate-400 mb-4" />
               <h2 className="text-xl font-semibold text-slate-700">Belum Ada Riwayat Skrining</h2>
@@ -271,40 +234,48 @@ const CarePage = () => {
           ) : (
             <div className="divide-y divide-slate-100">
               {historyData.slice().reverse().map((item) => (
-                <div 
-                  key={item.id} 
-                  className="flex items-center justify-between p-4 hover:bg-pink-50/50 cursor-pointer transition-colors" 
-                  onClick={() => navigate('/results', { state: { screeningId: item.id } })}
-                >
-                  <div>
-                    <p className="font-semibold text-slate-800">
-                      {new Date(item.completed_at).toLocaleDateString('id-ID', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <p className="text-sm text-slate-500">
-                        Skor: {item.total_score} / 93 ({getQuizTypeText(item.screening_type)})
+                <div key={item.id} className="p-4 space-y-3">
+                  <div 
+                    className="flex items-start justify-between cursor-pointer" 
+                    onClick={() => navigate('/results', { state: { screeningId: item.id } })}
+                  >
+                    <div className="flex-1">
+                      <p className="font-semibold text-slate-800">
+                        {new Date(item.completed_at).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                       </p>
-                      {/* Assuming 'reviewed' status would come from the item if applicable */}
+                      <p className="text-sm text-slate-500 mt-1">
+                        {getQuizTypeText(item.screening_type)} - Skor: {item.total_score}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-4 ml-4">
+                      <Badge className={`capitalize whitespace-nowrap ${badgeColorMap[item.anxiety_level]}`}>{getAnxietyLevelText(item.anxiety_level)}</Badge>
+                      <ChevronRight className="h-5 w-5 text-slate-400 flex-shrink-0" />
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <Badge className={`capitalize ${badgeColorMap[item.anxiety_level]}`}>
-                      {getAnxietyLevelText(item.anxiety_level)}
-                    </Badge>
-                    <ChevronRight className="h-5 w-5 text-slate-400" />
-                  </div>
+
+                  {/* --- Review Section --- */}
+                  {item.status === 'reviewed' && item.notes && (
+                    <div className="mt-2 pt-3 border-t border-pink-100 bg-pink-50/70 p-4 rounded-lg">
+                      <h4 className="font-semibold text-sm text-pink-800 flex items-center mb-2">
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Tinjauan dari Admin
+                      </h4>
+                      <blockquote className="text-sm text-slate-600 italic border-l-4 border-pink-200 pl-4">
+                        {item.notes}
+                      </blockquote>
+                      {item.reviewed_at && (
+                        <p className="text-xs text-slate-400 text-right mt-2">
+                          Ditinjau pada: {new Date(item.reviewed_at).toLocaleDateString('id-ID', { month: 'long', day: 'numeric' })}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           )}
         </CardContent>
       </Card>
-
     </div>
   );
 };
