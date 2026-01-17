@@ -9,8 +9,8 @@ export type AnxietyInterpretation = {
 const ANXIETY_THRESHOLDS = [
   // Skor 41-93: Cemas Berat
   { minScore: 41, maxScore: 93, level: "Cemas Berat", color: 'Merah', description: "Tingkat kecemasan Anda tergolong berat. Sangat disarankan untuk segera berkonsultasi dengan tenaga profesional.", className: "text-red-500" },
-  // Skor 27-40: Cemas Sedang (Asumsi dari diskusi sebelumnya)
-  { minScore: 27, maxScore: 40, level: "Cemas Sedang", color: 'Kuning', description: "Anda mengalami gejala kecemasan sedang. Disarankan untuk mempraktikkan teknik relaksasi dan memonitor kondisi Anda.", className: "text-yellow-500" },
+  // Skor 27-40: Cemas Ringan (Kuning)
+  { minScore: 27, maxScore: 40, level: "Cemas Ringan", color: 'Kuning', description: "Anda mengalami gejala kecemasan ringan. Disarankan untuk mempraktikkan teknik relaksasi dan memonitor kondisi Anda.", className: "text-yellow-500" },
   // Skor 21-26: Cemas Ringan
   { minScore: 21, maxScore: 26, level: "Cemas Ringan", color: 'Hijau', description: "Anda menunjukkan gejala kecemasan ringan. Tetap jaga pola hidup sehat dan manajemen stres.", className: "text-green-500" }
 ];

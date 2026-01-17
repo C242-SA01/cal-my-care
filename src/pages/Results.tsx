@@ -8,11 +8,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, Heart, TrendingUp, BookOpen, AlertTriangle, CheckCircle, Info, Loader2, MessageSquare } from 'lucide-react';
+import { getAnxietyInterpretation } from '@/lib/interpretationUtils';
 
 interface Screening {
   id: string;
   total_score: number;
-  anxiety_level: 'normal' | 'ringan' | 'sedang' | 'berat';
   completed_at: string;
   status: 'in_progress' | 'completed' | 'reviewed';
   notes: string | null;
@@ -56,13 +56,18 @@ export default function Results() {
 
     if (user && screeningId) {
       fetchScreeningResult();
-      fetchRecommendations();
     }
   }, [user, loading, screeningId, navigate]);
 
+  useEffect(() => {
+    if (screening) {
+      fetchRecommendations();
+    }
+  }, [screening]);
+
   const fetchScreeningResult = async () => {
     try {
-      const { data, error } = await supabase.from('screenings').select('*').eq('id', screeningId).eq('user_id', user?.id).single();
+      const { data, error } = await supabase.from('screenings').select('id, total_score, completed_at, status, notes').eq('id', screeningId).eq('user_id', user?.id).single();
 
       if (error) throw error;
       setScreening(data);
@@ -79,8 +84,9 @@ export default function Results() {
   const fetchRecommendations = async () => {
     try {
       if (!screening) return;
+      const { level } = getAnxietyInterpretation(screening.total_score);
 
-      const { data, error } = await supabase.from('educational_materials').select('*').eq('anxiety_level', screening.anxiety_level).eq('is_published', true).limit(3);
+      const { data, error } = await supabase.from('educational_materials').select('*').eq('anxiety_level', level.toLowerCase()).eq('is_published', true).limit(3);
 
       if (error) throw error;
       setRecommendations(data || []);
@@ -91,52 +97,45 @@ export default function Results() {
     }
   };
 
-  const getResultInfo = (level: string, score: number) => {
-    switch (level) {
-      case 'normal':
+  const getDynamicResultInfo = (interpretation: AnxietyInterpretation) => {
+    switch (interpretation.level) {
+      case 'Normal':
         return {
           title: 'Normal',
-          description: 'Tingkat kecemasan Anda tergolong normal. Ini adalah hasil yang sangat baik!',
+          description: interpretation.description,
           color: 'text-green-600',
           bgColor: 'bg-green-50',
           borderColor: 'border-green-200',
           icon: CheckCircle,
           recommendation: 'Pertahankan gaya hidup sehat, kelola stres dengan baik, dan terus pantau perubahan suasana hati Anda.',
         };
-      case 'ringan':
+      case 'Cemas Ringan': // This now covers both Green and Yellow
         return {
           title: 'Cemas Ringan',
-          description: 'Anda teridentifikasi mengalami kecemasan tingkat ringan.',
-          color: 'text-green-600',
-          bgColor: 'bg-green-50',
-          borderColor: 'border-green-200',
-          icon: CheckCircle,
-          recommendation: 'Coba teknik relaksasi, mindfulness, dan pastikan Anda mendapatkan istirahat yang cukup.',
+          description: interpretation.description,
+          color: interpretation.color === 'Hijau' ? 'text-green-600' : 'text-yellow-600',
+          bgColor: interpretation.color === 'Hijau' ? 'bg-green-50' : 'bg-yellow-50',
+          borderColor: interpretation.color === 'Hijau' ? 'border-green-200' : 'border-yellow-200',
+          icon: interpretation.color === 'Hijau' ? CheckCircle : AlertTriangle, // Use AlertTriangle for Yellow 'Cemas Ringan'
+          recommendation: interpretation.color === 'Hijau'
+            ? 'Coba teknik relaksasi, mindfulness, dan pastikan Anda mendapatkan istirahat yang cukup.'
+            : 'Meskipun ringan, tetap penting untuk mengelola kecemasan Anda. Coba teknik relaksasi, mindfulness, dan pertimbangkan untuk berbicara dengan orang terpercaya.',
         };
-      case 'sedang':
-        return {
-          title: 'Cemas Sedang',
-          description: 'Tingkat kecemasan Anda berada di level sedang. Penting untuk mencari dukungan.',
-          color: 'text-yellow-600',
-          bgColor: 'bg-yellow-50',
-          borderColor: 'border-yellow-200',
-          icon: AlertTriangle,
-          recommendation: 'Sangat disarankan untuk berbagi perasaan Anda dengan pasangan, teman, atau anggota keluarga. Pertimbangkan untuk berkonsultasi dengan bidan atau konselor.',
-        };
-      case 'berat':
+      case 'Cemas Berat':
         return {
           title: 'Cemas Berat',
-          description: 'Anda menunjukkan tanda-tanda kecemasan berat. Mencari bantuan profesional adalah prioritas.',
+          description: interpretation.description,
           color: 'text-red-600',
           bgColor: 'bg-red-50',
           borderColor: 'border-red-200',
           icon: AlertTriangle,
-          recommendation: 'Segera konsultasikan dengan dokter, psikolog, atau psikiater untuk mendapatkan evaluasi dan penanganan yang tepat.',
+          recommendation: 'Anda menunjukkan tanda-tanda kecemasan berat. Mencari bantuan profesional adalah prioritas. Segera konsultasikan dengan dokter, psikolog, atau psikiater untuk mendapatkan evaluasi dan penanganan yang tepat.',
         };
+      case 'Tidak Tersedia':
       default:
         return {
           title: 'Hasil Tidak Diketahui',
-          description: 'Terjadi kesalahan dalam memproses hasil.',
+          description: interpretation.description || 'Terjadi kesalahan dalam memproses hasil.',
           color: 'text-gray-600',
           bgColor: 'bg-gray-50',
           borderColor: 'border-gray-200',
@@ -162,7 +161,8 @@ export default function Results() {
     );
   }
 
-  const resultInfo = getResultInfo(screening.anxiety_level, screening.total_score);
+  const interpretedAnxiety = getAnxietyInterpretation(screening.total_score);
+  const resultInfo = getDynamicResultInfo(interpretedAnxiety);
   const IconComponent = resultInfo.icon;
 
   return (
@@ -263,7 +263,7 @@ export default function Results() {
                 <p className="text-xs text-green-600 mt-1">Tingkat kecemasan rendah</p>
               </div>
               <div className="p-4 rounded-lg bg-yellow-50 border border-yellow-200">
-                <h4 className="font-semibold text-yellow-800">Cemas Sedang</h4>
+                <h4 className="font-semibold text-yellow-800">Cemas Ringan</h4>
                 <p className="text-sm text-yellow-700">27-40 poin</p>
                 <p className="text-xs text-yellow-600 mt-1">Perlu perhatian dan pengelolaan</p>
               </div>
