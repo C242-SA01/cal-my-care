@@ -8,12 +8,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { FileText, BookOpen, TrendingUp, Loader2, History } from 'lucide-react';
 import { LatestReview } from '@/components/calmy/LatestReview';
+import { getAnxietyInterpretation } from '@/lib/interpretationUtils';
 
 interface Screening {
   id: string;
   status: 'in_progress' | 'completed' | 'reviewed';
   total_score: number | null;
-  anxiety_level: 'normal' | 'ringan' | 'sedang' | 'berat' | null;
   started_at: string;
   completed_at: string | null;
   trimester: number;
@@ -34,7 +34,7 @@ export default function Dashboard() {
   const fetchScreenings = async () => {
     try {
       setIsScreeningLoading(true);
-            const { data, error } = await supabase.from('screenings').select('id, status, total_score, anxiety_level, started_at, completed_at, trimester').eq('user_id', user?.id).order('started_at', { ascending: false });
+            const { data, error } = await supabase.from('screenings').select('id, status, total_score, started_at, completed_at, trimester').eq('user_id', user?.id).order('started_at', { ascending: false });
 
       if (error) throw error;
       setScreenings(data || []);
@@ -43,42 +43,6 @@ export default function Dashboard() {
     } finally {
       setIsScreeningLoading(false);
     }
-  };
-
-  const getAnxietyLevelVariant = (level: string | null): BadgeProps['variant'] => {
-    switch (level) {
-      case 'normal':
-      case 'ringan':
-        return 'success';
-      case 'sedang':
-        return 'warning';
-      case 'berat':
-        return 'destructive';
-      default:
-        return 'secondary';
-    }
-  };
-
-  const getAnxietyLevelTextColor = (level: string | null): string => {
-    switch (level) {
-      case 'normal':
-      case 'ringan':
-        return 'text-success-foreground';
-      case 'sedang':
-        return 'text-warning-foreground';
-      case 'berat':
-        return 'text-destructive-foreground';
-      default:
-        return 'text-secondary-foreground';
-    }
-  };
-
-  const getAnxietyLevelText = (level: string | null) => {
-    if (!level) return 'Belum Selesai';
-    if (level === 'ringan') return 'Cemas Ringan';
-    if (level === 'sedang') return 'Cemas Sedang';
-    if (level === 'berat') return 'Cemas Berat';
-    return level.charAt(0).toUpperCase() + level.slice(1); // For 'Normal'
   };
 
   const isLoading = isProfileLoading || isScreeningLoading;
@@ -94,6 +58,8 @@ export default function Dashboard() {
   const latestScreening = screenings.find((s) => s.status === 'completed');
   const inProgressScreening = screenings.find((s) => s.status === 'in_progress');
   const completedScreeningsCount = screenings.filter((s) => s.status === 'completed').length;
+
+  const interpretedAnxiety = getAnxietyInterpretation(latestScreening?.total_score);
 
   return (
     <div className="space-y-6">
@@ -155,8 +121,13 @@ export default function Dashboard() {
             <CardTitle>Hasil Terakhir</CardTitle>
           </CardHeader>
           <CardContent className="flex-grow flex items-end justify-between">
-            <Badge variant={getAnxietyLevelVariant(latestScreening?.anxiety_level)} className="text-base">
-              {getAnxietyLevelText(latestScreening?.anxiety_level)}
+            <Badge variant={
+              interpretedAnxiety.color === 'Merah' ? 'destructive' :
+              interpretedAnxiety.color === 'Kuning' ? 'warning' :
+              interpretedAnxiety.color === 'Hijau' ? 'success' :
+              'secondary'
+            } className="text-base">
+              {interpretedAnxiety.level}
             </Badge>
             <TrendingUp className="h-10 w-10 text-primary/70" />
           </CardContent>
@@ -178,11 +149,11 @@ export default function Dashboard() {
               {latestScreening.completed_at && <CardDescription>Diselesaikan pada {new Date(latestScreening.completed_at).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })}</CardDescription>}
             </CardHeader>
             <CardContent>
-              {latestScreening.total_score !== null && latestScreening.anxiety_level && (
+              {latestScreening.total_score !== null && (
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm font-medium">
                     <span>Skor: {latestScreening.total_score}/93</span>
-                    <span className={`font-semibold ${getAnxietyLevelTextColor(latestScreening.anxiety_level)}`}>{getAnxietyLevelText(latestScreening.anxiety_level)}</span>
+                    <span className={`font-semibold ${interpretedAnxiety.className}`}>{interpretedAnxiety.level}</span>
                   </div>
                   <Progress value={(latestScreening.total_score / 93) * 100} className="h-2" />
                 </div>
